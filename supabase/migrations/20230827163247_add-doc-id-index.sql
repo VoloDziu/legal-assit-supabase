@@ -1,1 +1,0 @@
-CREATE INDEX idx_document_id ON public.documents USING btree (doc_id);

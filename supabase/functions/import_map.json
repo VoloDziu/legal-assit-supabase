@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "supabase": "https://esm.sh/@supabase/supabase-js@2.33.1",
+    "langchain.embeddings.openai": "https://esm.sh/langchain@0.0.135/embeddings/openai",
+    "langchain.vectorstores.supabase": "https://esm.sh/langchain@0.0.135/vectorstores/supabase",
+    "langchain.document": "https://esm.sh/langchain@0.0.135/document"
+  }
+}

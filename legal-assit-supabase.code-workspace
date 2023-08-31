@@ -1,17 +1,27 @@
 {
   "folders": [
     {
-      "name": "project-root",
+      "name": "root",
       "path": "./"
     },
     {
-      "name": "supabase-functions",
+      "name": "app",
+      "path": "app"
+    },
+    {
+      "name": "supabase",
+      "path": "supabase",
+    },
+    {
+      "name": "edge-functions",
       "path": "supabase/functions"
     }
   ],
   "settings": {
     "files.exclude": {
-      "supabase/functions/": true
-    }
+      "supabase": true,
+      "app": true
+    },
+    "deno.importMap": "./supabase/functions/import_map.json"
   }
 }
