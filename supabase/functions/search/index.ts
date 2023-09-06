@@ -1,34 +1,92 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { vectorStore } from "../setup.ts";
+import { supabase } from "../db.ts";
+import { embed } from "../ai-transformers.ts";
 
-// export const corsHeaders = {
-//   "Access-Control-Allow-Origin": "*",
-//   "Access-Control-Allow-Headers":
-//     "authorization, x-client-info, apikey, content-type",
-// };
+type DocProcessResult = DocProcessResultSuccess | DocProcessResultError;
+interface DocProcessResultSuccess {
+  success: true;
+  data: {
+    id: string;
+    url: string;
+    origin: string;
+    title: string;
+    paragraphs: {
+      id: string;
+      content: string;
+      similarity: number;
+    }[];
+  };
+}
 
-serve(async (req) => {
-  // // Handle CORS
-  // if (req.method === "OPTIONS") {
-  //   return new Response("ok", { headers: corsHeaders });
-  // }
+interface DocProcessResultError {
+  success: false;
+}
 
-  // Search query is passed in request payload
-  const { query, count } = await req.json();
+async function getSimilarity(
+  documentId: string,
+  queryEmbedding: number[]
+): Promise<DocProcessResult> {
+  const { data, error } = await supabase.rpc("find_top_similar_paragraphs", {
+    target_document_id: documentId,
+    query_embeddings: queryEmbedding,
+    n: 3,
+  });
 
-  try {
-    const results = await vectorStore.similaritySearch(query, count || 10);
+  console.log(">>>", documentId, data, error);
 
-    return new Response(JSON.stringify(results), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    console.error(err);
-    return new Response(String(err?.message ?? err), { status: 500 });
+  if (error || !data || data.length === 0) {
+    return {
+      success: false,
+    };
   }
 
-  // return new Response(JSON.stringify(documents), {
-  //   headers: { ...corsHeaders, "Content-Type": "application/json" },
-  // });
+  const result: DocProcessResultSuccess = {
+    success: true,
+    data: {
+      id: data[0].document_id,
+      title: data[0].document_title,
+      origin: data[0].document_origin,
+      url: data[0].document_url,
+      paragraphs: [],
+    },
+  };
+
+  for (const item of data) {
+    result.data.paragraphs.push({
+      id: item.paragraph_id,
+      content: item.paragraph_content,
+      similarity: item.similarity,
+    });
+  }
+
+  result.data.paragraphs.sort((a, b) => b.similarity - a.similarity);
+
+  return result;
+}
+
+serve(async (req) => {
+  const { documentIds, query }: { documentIds: string[]; query: string } =
+    await req.json();
+  let queryEmbedding: number[] = [];
+
+  try {
+    queryEmbedding = await embed(query);
+  } catch {
+    return new Response("failed to create embeddings for the search query", {
+      status: 500,
+    });
+  }
+
+  const documentPromises: Promise<DocProcessResult>[] = [];
+
+  for (const documentId of documentIds) {
+    documentPromises.push(getSimilarity(documentId, queryEmbedding));
+  }
+
+  const results = await Promise.all(documentPromises);
+
+  return new Response(JSON.stringify(results), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });
