@@ -29,6 +29,7 @@ async function sendStateToApp(tabId: number) {
   const state = selectTabState(tabId);
   sidePanelPort.postMessage({
     type: "update-state",
+    state: state,
   } as Message);
   return;
 }

@@ -116,6 +116,8 @@ export const tabsSlice = createSlice({
       if (!tabState?.data || tabState?.data.pageType !== "search") {
         return { ...state };
       }
+
+      tabState.data.status = "error";
     },
   },
 });

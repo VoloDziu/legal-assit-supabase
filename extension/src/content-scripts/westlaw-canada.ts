@@ -18,7 +18,13 @@ function getDocumentId(href: string): string {
   const url = new URL(href);
   const urlPathParts = url.pathname.split("/");
 
-  // url should be in the following format:
+  // "linkouts" have titleId encoded in the URL search params
+  const searchParamsTitleId = url.searchParams.get("titleID");
+  if (searchParamsTitleId) {
+    return `westlaw-linkout-${searchParamsTitleId}`;
+  }
+
+  // internal urls are in the following format:
   // {host}/Document/{id}/View/FullText.html?{search}
   const documentPartIndex = urlPathParts.indexOf("Document");
   if (documentPartIndex === -1) {
@@ -99,7 +105,7 @@ async function pageHandler(): Promise<void> {
       query: "",
       status: "idle",
       documents: Array.from(anchors).map((anchor) => ({
-        id: `westlaw-${getDocumentId(anchor.href)}`,
+        id: getDocumentId(anchor.href),
         url: anchor.href,
         title: anchor.innerText,
         isProcessed: false,

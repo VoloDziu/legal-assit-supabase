@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Connection, Message, MessageType, appOpened } from "../store/models";
-import { TabState } from "../store/tabs";
+import { Connections, Message, TabState } from "../store/models";
 import { NotSupportedView } from "./views/NotSupported";
 import { LoadingView } from "./views/Loading";
 import { SearchResultsView } from "./views/SearchResults";
@@ -11,10 +10,11 @@ function App() {
   const [port, setPort] = useState<chrome.runtime.Port>();
 
   useEffect(() => {
-    const p = chrome.runtime.connect({ name: Connection.SidePanel });
-    p.postMessage(appOpened());
+    const p = chrome.runtime.connect({ name: Connections.SidePanel });
+    p.postMessage({ type: "app-init" } as Message);
     p.onMessage.addListener(function (message: Message) {
-      if (message.type === MessageType.StateUpdated) {
+      console.log("here!!!");
+      if (message.type === "update-state") {
         setAppState(message.state);
       }
     });
@@ -31,7 +31,7 @@ function App() {
   } else if (appState.loading) {
     return <LoadingView />;
   } else {
-    switch (appState.pageType) {
+    switch (appState.data?.pageType) {
       case "search":
         return <SearchResultsView state={appState} port={port} />;
       default:

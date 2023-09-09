@@ -6,7 +6,9 @@ export async function generateEmbeddings(
   extractedContent: ExtractedContent[]
 ): Promise<void> {
   //
-  return Promise.resolve();
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), 1000);
+  });
 }
 
 export async function generateSummaries(
@@ -24,7 +26,19 @@ export async function generateSummaries(
   //   },
   // });
   // return await result.json();
-  return Promise.resolve([] as any);
+  return new Promise((resolve) => {
+    setTimeout(
+      () =>
+        resolve({
+          results: documentIds.map((documentId) => ({
+            documentId,
+            summary: "this is a dummy summary",
+            relevantParagraphs: ["paragraph a", "paragraph b", "paragraph c"],
+          })),
+        }),
+      3000
+    );
+  });
 }
 
 export async function getProcessedDocuments(
@@ -40,5 +54,7 @@ export async function getProcessedDocuments(
   //   },
   // });
   // return await result.json();
-  return Promise.resolve([]);
+  return new Promise((resolve) => {
+    setTimeout(() => resolve([]), 1000);
+  });
 }
