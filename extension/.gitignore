@@ -1,0 +1,11 @@
+.DS_Store
+.env
+__pycache__/
+node_modules/
+.aws/
+build.sh
+notes
+test-data/
+npm-debug.log*
+.parcel-cache
+build/

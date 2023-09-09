@@ -1,65 +1,57 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { supabase } from "../db.ts";
 import { embed } from "../ai-transformers.ts";
+import { summarizeParagraphs } from "../ai-openai.ts";
+import { supabase } from "../db.ts";
 
-type DocProcessResult = DocProcessResultSuccess | DocProcessResultError;
-interface DocProcessResultSuccess {
+interface SimilaritySearchSuccess {
   success: true;
-  data: {
+  documentId: string;
+  summary: string;
+  paragraphs: {
     id: string;
-    url: string;
-    origin: string;
-    title: string;
-    paragraphs: {
-      id: string;
-      content: string;
-      similarity: number;
-    }[];
-  };
+    content: string;
+    similarity: number;
+  }[];
 }
 
-interface DocProcessResultError {
+interface SimilaritySearchFail {
   success: false;
+  documentId: string;
 }
 
-async function getSimilarity(
+export type SimilaritySearchResult =
+  | SimilaritySearchSuccess
+  | SimilaritySearchFail;
+
+export async function getSimilarParagraphs(
   documentId: string,
   queryEmbedding: number[]
-): Promise<DocProcessResult> {
+): Promise<SimilaritySearchResult> {
   const { data, error } = await supabase.rpc("find_top_similar_paragraphs", {
     target_document_id: documentId,
     query_embeddings: queryEmbedding,
     n: 3,
   });
 
-  console.log(">>>", documentId, data, error);
-
   if (error || !data || data.length === 0) {
     return {
       success: false,
+      documentId: documentId,
     };
   }
 
-  const result: DocProcessResultSuccess = {
+  const result: SimilaritySearchSuccess = {
     success: true,
-    data: {
-      id: data[0].document_id,
-      title: data[0].document_title,
-      origin: data[0].document_origin,
-      url: data[0].document_url,
-      paragraphs: [],
-    },
-  };
-
-  for (const item of data) {
-    result.data.paragraphs.push({
+    documentId: data[0].document_id,
+    summary: "",
+    paragraphs: data.map((item) => ({
       id: item.paragraph_id,
       content: item.paragraph_content,
       similarity: item.similarity,
-    });
-  }
+    })),
+  };
 
-  result.data.paragraphs.sort((a, b) => b.similarity - a.similarity);
+  result.paragraphs.sort((a, b) => b.similarity - a.similarity);
 
   return result;
 }
@@ -77,15 +69,27 @@ serve(async (req) => {
     });
   }
 
-  const documentPromises: Promise<DocProcessResult>[] = [];
+  const searchResultPromises: Promise<SimilaritySearchResult>[] =
+    documentIds.map((id) => getSimilarParagraphs(id, queryEmbedding));
+  const searchResults = await Promise.all(searchResultPromises);
 
-  for (const documentId of documentIds) {
-    documentPromises.push(getSimilarity(documentId, queryEmbedding));
-  }
+  const summarizedResultPromises: Promise<SimilaritySearchResult>[] =
+    searchResults.map((d) => {
+      if (!d.success) {
+        return Promise.resolve(d);
+      }
 
-  const results = await Promise.all(documentPromises);
+      return summarizeParagraphs(
+        d.paragraphs.map((p) => p.content),
+        query
+      ).then((summary) => ({
+        ...d,
+        summary,
+      }));
+    });
+  const summarizedResults = await Promise.all(summarizedResultPromises);
 
-  return new Response(JSON.stringify(results), {
+  return new Response(JSON.stringify(summarizedResults), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

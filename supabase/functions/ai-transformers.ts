@@ -1,7 +1,4 @@
-import {
-  env,
-  pipeline,
-} from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.5.0";
+import { env, pipeline } from "transformers";
 
 // Configuration for Deno runtime
 env.useBrowserCache = false;
