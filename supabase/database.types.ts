@@ -4,135 +4,116 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
 export interface Database {
   public: {
     Tables: {
       documents: {
         Row: {
-          created_at: string;
-          id: string;
-          origin: string;
-          title: string;
-          url: string;
-        };
+          id: string
+        }
         Insert: {
-          created_at?: string;
-          id: string;
-          origin: string;
-          title: string;
-          url: string;
-        };
+          id: string
+        }
         Update: {
-          created_at?: string;
-          id?: string;
-          origin?: string;
-          title?: string;
-          url?: string;
-        };
-        Relationships: [];
-      };
+          id?: string
+        }
+        Relationships: []
+      }
       paragraphs: {
         Row: {
-          content: string;
-          created_at: string;
-          document_id: string;
-          embeddings: number[];
-          id: string;
-        };
+          content: string
+          document_id: string
+          embeddings: string
+          id: string
+        }
         Insert: {
-          content: string;
-          created_at?: string;
-          document_id: string;
-          embeddings: number[];
-          id: string;
-        };
+          content: string
+          document_id: string
+          embeddings: string
+          id: string
+        }
         Update: {
-          content?: string;
-          created_at?: string;
-          document_id?: string;
-          embeddings?: number[];
-          id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "paragraphs_document_id_fkey";
-            columns: ["document_id"];
-            referencedRelation: "documents";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-    };
+          content?: string
+          document_id?: string
+          embeddings?: string
+          id?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
-      find_top_similar_paragraphs: {
+      get_n_similar_paragraphs: {
         Args: {
-          target_document_id: string;
-          query_embeddings: number[];
-          n: number;
-        };
+          target_document_id: string
+          query_embeddings: string
+          n: number
+        }
         Returns: {
-          document_id: string;
-          document_title: string;
-          document_url: string;
-          document_origin: string;
-          paragraph_id: string;
-          paragraph_content: string;
-          similarity: number;
-        }[];
-      };
+          id: string
+          document_id: string
+          content: string
+          similarity: number
+        }[]
+      }
+      hnswhandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       ivfflathandler: {
         Args: {
-          "": unknown;
-        };
-        Returns: unknown;
-      };
+          "": unknown
+        }
+        Returns: unknown
+      }
       vector_avg: {
         Args: {
-          "": number[];
-        };
-        Returns: string;
-      };
+          "": number[]
+        }
+        Returns: string
+      }
       vector_dims: {
         Args: {
-          "": string;
-        };
-        Returns: number;
-      };
+          "": string
+        }
+        Returns: number
+      }
       vector_norm: {
         Args: {
-          "": string;
-        };
-        Returns: number;
-      };
+          "": string
+        }
+        Returns: number
+      }
       vector_out: {
         Args: {
-          "": string;
-        };
-        Returns: unknown;
-      };
+          "": string
+        }
+        Returns: unknown
+      }
       vector_send: {
         Args: {
-          "": string;
-        };
-        Returns: string;
-      };
+          "": string
+        }
+        Returns: string
+      }
       vector_typmod_in: {
         Args: {
-          "": unknown[];
-        };
-        Returns: number;
-      };
-    };
+          "": unknown[]
+        }
+        Returns: number
+      }
+    }
     Enums: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
+      [_ in never]: never
+    }
+  }
 }
