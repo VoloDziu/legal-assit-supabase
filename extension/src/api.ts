@@ -1,6 +1,6 @@
 import { DocumentSummary, ExtractedContent } from "./store/models";
 
-const API_URL = "http://localhost";
+const API_URL = "http://localhost:54321/functions/v1";
 
 export async function createEmbeddings(
   docs: ExtractedContent[]
