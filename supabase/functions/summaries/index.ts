@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { supabase } from "../db.ts";
 import { embed } from "../ai-transformers.ts";
-import { summarizeParagraphs } from "../ai-openai.ts";
+import { summarizeParagraphs } from "../ai-huggingface.ts";
 
 interface SimilaritySearchResult {
   success: boolean;
