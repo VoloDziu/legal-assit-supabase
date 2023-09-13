@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { supabase } from "../db.ts";
 import { embed } from "../ai-transformers.ts";
 import { summarizeParagraphs } from "../ai-openai.ts";
-import { supabase } from "../db.ts";
 
-interface SimilaritySearchSuccess {
-  success: true;
+interface SimilaritySearchResult {
+  success: boolean;
   documentId: string;
   summary: string;
   paragraphs: {
@@ -14,44 +14,33 @@ interface SimilaritySearchSuccess {
   }[];
 }
 
-interface SimilaritySearchFail {
-  success: false;
-  documentId: string;
-}
-
-export type SimilaritySearchResult =
-  | SimilaritySearchSuccess
-  | SimilaritySearchFail;
-
 export async function getSimilarParagraphs(
   documentId: string,
   queryEmbedding: number[]
 ): Promise<SimilaritySearchResult> {
-  const { data, error } = await supabase.rpc("find_top_similar_paragraphs", {
+  const { data, error } = await supabase.rpc("get_n_similar_paragraphs", {
     target_document_id: documentId,
     query_embeddings: queryEmbedding,
     n: 3,
   });
 
-  if (error || !data || data.length === 0) {
-    return {
-      success: false,
-      documentId: documentId,
-    };
-  }
-
-  const result: SimilaritySearchSuccess = {
-    success: true,
-    documentId: data[0].document_id,
+  const result: SimilaritySearchResult = {
+    success: false,
+    documentId: documentId,
     summary: "",
-    paragraphs: data.map((item) => ({
-      id: item.paragraph_id,
-      content: item.paragraph_content,
-      similarity: item.similarity,
-    })),
+    paragraphs: [],
   };
 
-  result.paragraphs.sort((a, b) => b.similarity - a.similarity);
+  if (!error && data && data.length > 0) {
+    result.success = true;
+    result.paragraphs = data.map((item) => ({
+      id: item.id,
+      content: item.content,
+      similarity: item.similarity,
+    }));
+
+    result.paragraphs.sort((a, b) => b.similarity - a.similarity);
+  }
 
   return result;
 }

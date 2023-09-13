@@ -36,13 +36,13 @@ AS $function$
 BEGIN
   RETURN QUERY
     SELECT 
-      id, 
-      document_id, 
-      content, 
-      1 - (embeddings <=> query_embeddings) AS similarity
+      paragraphs.id, 
+      paragraphs.document_id, 
+      paragraphs.content, 
+      1 - (paragraphs.embeddings <=> query_embeddings) AS similarity
     FROM paragraphs
-    WHERE document_id = target_document_id
-    ORDER BY 1 - (embeddings <=> query_embeddings) DESC
+    WHERE paragraphs.document_id = target_document_id
+    ORDER BY 1 - (paragraphs.embeddings <=> query_embeddings) DESC
     LIMIT n;
 END;
 $function$

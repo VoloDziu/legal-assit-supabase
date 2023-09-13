@@ -3,43 +3,40 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { supabase } from "../db.ts";
 import { bulkEmbed } from "../ai-transformers.ts";
 
-interface Document {
-  id: string;
-  title: string;
-  url: string;
-  origin: string;
+interface ExtractedContent {
+  documentId: string;
   paragraphs: string[];
 }
 
-interface DocProcessResult {
-  id: string;
+interface Result {
+  documentId: string;
   success: boolean;
   message?: string;
   error?: any;
 }
 
-async function processDocument(doc: Document): Promise<DocProcessResult> {
+async function processDocument(doc: ExtractedContent): Promise<Result> {
   let embeddings: number[][];
   try {
     embeddings = await bulkEmbed(doc.paragraphs);
   } catch (embeddingError) {
     return {
-      id: doc.id,
+      documentId: doc.documentId,
       success: false,
-      message: `failed create embeddings for ${doc.id}`,
+      message: `failed create embeddings for ${doc.documentId}`,
       error: embeddingError,
     };
   }
 
   const { error: docInsertError } = await supabase
     .from("documents")
-    .upsert({ id: doc.id, origin: doc.origin, title: doc.title, url: doc.url });
+    .upsert({ id: doc.documentId });
 
   if (docInsertError) {
     return {
-      id: doc.id,
+      documentId: doc.documentId,
       success: false,
-      message: `failed to save document ${doc.id}`,
+      message: `failed to save document ${doc.documentId}`,
       error: docInsertError,
     };
   }
@@ -47,32 +44,32 @@ async function processDocument(doc: Document): Promise<DocProcessResult> {
   const { error: paragraphInsertError } = await supabase
     .from("paragraphs")
     .upsert(
-      doc.paragraphs.map((content, index) => ({
-        id: `${doc.id}-${index}`,
-        document_id: doc.id,
-        content,
+      doc.paragraphs.map((paragraph, index) => ({
+        id: `${doc.documentId}-${index}`,
+        document_id: doc.documentId,
+        content: paragraph,
         embeddings: embeddings[index],
       }))
     );
 
   if (paragraphInsertError) {
     return {
-      id: doc.id,
+      documentId: doc.documentId,
       success: false,
-      message: `failed to save paragraphs for ${doc.id}`,
+      message: `failed to save paragraphs for ${doc.documentId}`,
       error: paragraphInsertError,
     };
   }
 
   return {
-    id: doc.id,
+    documentId: doc.documentId,
     success: true,
   };
 }
 
 serve(async (req) => {
-  const { docs }: { docs: Document[] } = await req.json();
-  const docPromises: Promise<DocProcessResult>[] = [];
+  const { docs }: { docs: ExtractedContent[] } = await req.json();
+  const docPromises: Promise<Result>[] = [];
 
   docs.forEach((d) => {
     docPromises.push(processDocument(d));

@@ -4,9 +4,9 @@ import { tabsSlice } from "./store/tabs";
 import { store } from "./store/store";
 import { selectTabState } from "./store/selectors";
 import {
-  generateEmbeddings,
+  createEmbeddings,
   generateSummaries,
-  getProcessedDocuments,
+  checkExistingDocuments,
 } from "./api";
 
 let sidePanelPort: chrome.runtime.Port | undefined;
@@ -98,9 +98,11 @@ chrome.runtime.onConnect.addListener(async function (port) {
               })
             );
 
-            const previouslyProcessedDocumentIds = await getProcessedDocuments(
-              tabState.data.documents.map((d) => d.id)
-            );
+            const previouslyProcessedDocumentIds = (
+              await checkExistingDocuments(
+                tabState.data.documents.map((d) => d.id)
+              )
+            ).map((doc) => doc.id);
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({
                 tabId: tab.id,
@@ -167,7 +169,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             }
 
             try {
-              await generateEmbeddings(tabSearchData.extractedContent);
+              await createEmbeddings(tabSearchData.extractedContent);
 
               const response = await generateSummaries(
                 tabSearchData.documents.map((doc) => doc.id),
