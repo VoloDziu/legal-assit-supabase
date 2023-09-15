@@ -1,8 +1,8 @@
-import { Document, DocumentSummary } from "../../store/models";
+import { Document, SummaryResult } from "../../models";
 
 interface Props {
   document: Document;
-  summary?: DocumentSummary;
+  summary?: SummaryResult;
 }
 
 export function SearchResultsItem({ document, summary }: Props) {

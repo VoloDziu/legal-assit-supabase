@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { supabase } from "../db.ts";
+import { supabase, corsHeaders } from "../supabase.ts";
 
 serve(async (req) => {
-  const { documentIds }: { documentIds: string[] } = await req.json();
-  {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { documentIds }: { documentIds: string[] } = await req.json();
+
     const { data, error } = await supabase
       .from("documents")
       .select()
@@ -16,8 +21,13 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
     });
   }
 });

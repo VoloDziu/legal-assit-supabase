@@ -1,4 +1,5 @@
-import { Connections, Message, TabData } from "../store/models";
+import { Connections, Message } from "../messaging";
+import { TabData } from "../store/tabs";
 
 function getSearchQuery(location: Location): string | null {
   const searchParams = new URLSearchParams(location.search);

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Connections, Message, TabState } from "../store/models";
 import { NotSupportedView } from "./views/NotSupported";
 import { LoadingView } from "./views/Loading";
 import { SearchResultsView } from "./views/SearchResults";
 import { DefaultView } from "./views/Default";
+import { TabState } from "../store/tabs";
+import { Connections, Message } from "../messaging";
 
 function App() {
   const [appState, setAppState] = useState<TabState | undefined>();
@@ -13,7 +14,6 @@ function App() {
     const p = chrome.runtime.connect({ name: Connections.SidePanel });
     p.postMessage({ type: "app-init" } as Message);
     p.onMessage.addListener(function (message: Message) {
-      console.log("here!!!");
       if (message.type === "update-state") {
         setAppState(message.state);
       }

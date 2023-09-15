@@ -1,4 +1,4 @@
-import { TabState } from "../../store/models";
+import { TabState } from "../../store/tabs";
 
 interface Props {
   state: TabState;

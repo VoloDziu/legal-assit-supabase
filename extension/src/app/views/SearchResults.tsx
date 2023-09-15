@@ -1,7 +1,8 @@
 import { FormEventHandler, useState } from "react";
-import { Message, TabState } from "../../store/models";
 import { SearchResultsLoading } from "../components/SearchResultsLoading";
 import { SearchResultsItem } from "../components/SearcjResultsItem";
+import { TabState } from "../../store/tabs";
+import { Message } from "../../messaging";
 
 interface Props {
   state: TabState;

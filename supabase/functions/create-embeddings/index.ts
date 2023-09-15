@@ -1,21 +1,14 @@
-// deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { supabase } from "../db.ts";
-import { bulkEmbed } from "../ai-transformers.ts";
+import { supabase, corsHeaders } from "../supabase.ts";
+import { bulkEmbed } from "../ai-openai.ts";
+import {
+  EmbeddingsResult,
+  ExtractedContent,
+} from "../../../extension/src/models.ts";
 
-interface ExtractedContent {
-  documentId: string;
-  paragraphs: string[];
-}
-
-interface Result {
-  documentId: string;
-  success: boolean;
-  message?: string;
-  error?: any;
-}
-
-async function processDocument(doc: ExtractedContent): Promise<Result> {
+async function processDocument(
+  doc: ExtractedContent
+): Promise<EmbeddingsResult> {
   let embeddings: number[][];
   try {
     embeddings = await bulkEmbed(doc.paragraphs);
@@ -68,17 +61,28 @@ async function processDocument(doc: ExtractedContent): Promise<Result> {
 }
 
 serve(async (req) => {
-  const { docs }: { docs: ExtractedContent[] } = await req.json();
-  const docPromises: Promise<Result>[] = [];
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
-  docs.forEach((d) => {
-    docPromises.push(processDocument(d));
-  });
+  try {
+    const { docs }: { docs: ExtractedContent[] } = await req.json();
+    const docPromises: Promise<EmbeddingsResult>[] = [];
 
-  const results = await Promise.all(docPromises);
+    docs.forEach((d) => {
+      docPromises.push(processDocument(d));
+    });
 
-  return new Response(JSON.stringify(results), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+    const results = await Promise.all(docPromises);
+
+    return new Response(JSON.stringify(results), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
 });

@@ -1,5 +1,5 @@
 import { ScaleLoader } from "react-spinners";
-import { Document } from "../../store/models";
+import { Document } from "../../models";
 
 interface Props {
   documents: Document[];

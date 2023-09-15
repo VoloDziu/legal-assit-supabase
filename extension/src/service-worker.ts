@@ -1,5 +1,4 @@
 import { PayloadAction } from "@reduxjs/toolkit";
-import { Connections, Message } from "./store/models";
 import { tabsSlice } from "./store/tabs";
 import { store } from "./store/store";
 import { selectTabState } from "./store/selectors";
@@ -8,6 +7,7 @@ import {
   generateSummaries,
   checkExistingDocuments,
 } from "./api";
+import { Connections, Message } from "./messaging";
 
 let sidePanelPort: chrome.runtime.Port | undefined;
 const tabPorts: { [id: string]: chrome.runtime.Port } = {};
@@ -179,11 +179,9 @@ chrome.runtime.onConnect.addListener(async function (port) {
               dispatch(
                 tabsSlice.actions.searchFinishedSuccess({
                   tabId,
-                  results: response.results,
+                  results: response,
                 })
               );
-
-              console.log("Done!", response);
             } catch (e: unknown) {
               console.error("Error", e);
             }

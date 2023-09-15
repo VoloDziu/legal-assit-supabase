@@ -1,15 +1,24 @@
 import OpenAI from "openai";
+import { summarizationPrompt } from "./prompts.ts";
 
 export const openai = new OpenAI();
-export const NO_MATCH_STRING = "MATCH NOT FOUND";
 
-function summarizationPrompt(paragraphs: string[], question: string): string {
-  return `Summarize the information in the following context that is relevant to the query at the end. Reply as succinctly as possible. If you cannot find information relevant to the query in the context, then say "${NO_MATCH_STRING}". 
+export async function embed(text: string): Promise<number[]> {
+  const { data } = await openai.embeddings.create({
+    model: "text-embedding-ada-002",
+    input: text,
+  });
 
-Context: 
-${paragraphs.join("\n\n")}
+  return data[0].embedding;
+}
 
-Query: ${question}`;
+export async function bulkEmbed(texts: string[]): Promise<number[][]> {
+  const { data } = await openai.embeddings.create({
+    model: "text-embedding-ada-002",
+    input: texts,
+  });
+
+  return data.map((d) => d.embedding);
 }
 
 export async function summarizeParagraphs(
@@ -28,5 +37,5 @@ export async function summarizeParagraphs(
   });
   const answer = chatCompletion.choices[0].message.content;
 
-  return answer && answer !== NO_MATCH_STRING ? answer : "";
+  return answer || "";
 }

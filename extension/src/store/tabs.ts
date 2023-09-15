@@ -1,10 +1,33 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-  DocumentSummary,
-  ExtractedContent,
-  TabData,
-  TabsState,
-} from "./models";
+import { ExtractedContent, SummaryResult } from "../models";
+
+export interface Document {
+  id: string;
+  url: string;
+  title: string;
+  isProcessed: boolean;
+}
+
+interface SearchTabData {
+  pageType: "search";
+  query: string;
+  status: "loading" | "idle" | "error";
+  documents: Document[];
+  extractedContent: ExtractedContent[]; // buffer before we send it to the API in bulk
+  similaritySearchResults: { [documentId: string]: SummaryResult };
+}
+
+export type TabData = SearchTabData;
+
+export interface TabState {
+  loading: boolean;
+  origin: string;
+  data?: TabData;
+}
+
+export interface TabsState {
+  [tabid: string]: TabState;
+}
 
 const initialTabsState: TabsState = {};
 
@@ -90,7 +113,7 @@ export const tabsSlice = createSlice({
       state,
       action: PayloadAction<{
         tabId: number;
-        results: DocumentSummary[];
+        results: SummaryResult[];
       }>
     ) {
       const tabState = state[action.payload.tabId];
