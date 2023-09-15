@@ -27,9 +27,6 @@ export type Message =
       data: ExtractedContent;
     }
   | {
-      type: "extraction-finished";
-    }
-  | {
       type: "tab-opened";
       origin: string;
     }

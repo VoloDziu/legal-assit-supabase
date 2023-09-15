@@ -1,12 +1,8 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { tabsSlice } from "./store/tabs";
 import { store } from "./store/store";
-import { selectTabState } from "./store/selectors";
-import {
-  createEmbeddings,
-  generateSummaries,
-  checkExistingDocuments,
-} from "./api";
+import { allDocumentsExtracted, selectTabState } from "./store/selectors";
+import { createEmbeddings, apiSummaries, checkExistingDocuments } from "./api";
 import { Connections, Message } from "./messaging";
 
 let sidePanelPort: chrome.runtime.Port | undefined;
@@ -32,6 +28,31 @@ async function sendStateToApp(tabId: number) {
     state: state,
   } as Message);
   return;
+}
+
+async function generateSummaries(tabId: number) {
+  const tabSearchData = selectTabState(tabId)?.data;
+
+  if (!tabSearchData) {
+    console.warn(`cannot find search data for tab ${tabId}`);
+    return;
+  }
+
+  try {
+    const response = await apiSummaries(
+      tabSearchData.documents.map((doc) => doc.id),
+      tabSearchData.query
+    );
+
+    dispatch(
+      tabsSlice.actions.searchFinishedSuccess({
+        tabId,
+        results: response,
+      })
+    );
+  } catch (e: unknown) {
+    console.error("Error", e);
+  }
 }
 
 function dispatch(action: PayloadAction<any>) {
@@ -109,10 +130,15 @@ chrome.runtime.onConnect.addListener(async function (port) {
                 documentIds: previouslyProcessedDocumentIds,
               })
             );
-            tabPort.postMessage({
-              type: "start-extraction",
-              documentIdsToIgnore: previouslyProcessedDocumentIds,
-            } as Message);
+
+            if (allDocumentsExtracted(tab.id)) {
+              generateSummaries(tab.id);
+            } else {
+              tabPort.postMessage({
+                type: "start-extraction",
+                documentIdsToIgnore: previouslyProcessedDocumentIds,
+              } as Message);
+            }
 
             return;
         }
@@ -153,39 +179,18 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
             return;
           case "document-extracted":
+            await createEmbeddings([message.data]);
+
             dispatch(
-              tabsSlice.actions.saveExtractedContent({
+              tabsSlice.actions.markDocumentsAsProcessed({
                 tabId,
-                data: message.data,
+                documentIds: [message.data.documentId],
               })
             );
-            return;
-          case "extraction-finished":
-            const tabSearchData = selectTabState(tabId)?.data;
 
-            if (!tabSearchData) {
-              console.warn(`cannot find search data for tab ${tabId}`);
-              return;
+            if (allDocumentsExtracted(tabId)) {
+              generateSummaries(tabId);
             }
-
-            try {
-              await createEmbeddings(tabSearchData.extractedContent);
-
-              const response = await generateSummaries(
-                tabSearchData.documents.map((doc) => doc.id),
-                tabSearchData.query
-              );
-
-              dispatch(
-                tabsSlice.actions.searchFinishedSuccess({
-                  tabId,
-                  results: response,
-                })
-              );
-            } catch (e: unknown) {
-              console.error("Error", e);
-            }
-
             return;
         }
       });

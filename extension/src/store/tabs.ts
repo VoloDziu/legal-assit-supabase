@@ -13,7 +13,6 @@ interface SearchTabData {
   query: string;
   status: "loading" | "idle" | "error";
   documents: Document[];
-  extractedContent: ExtractedContent[]; // buffer before we send it to the API in bulk
   similaritySearchResults: { [documentId: string]: SummaryResult };
 }
 
@@ -72,7 +71,6 @@ export const tabsSlice = createSlice({
 
       tabState.data.query = action.payload.query;
       tabState.data.similaritySearchResults = {};
-      tabState.data.extractedContent = [];
       tabState.data.status = "loading";
     },
     markDocumentsAsProcessed(
@@ -89,24 +87,6 @@ export const tabsSlice = createSlice({
         if (action.payload.documentIds.includes(doc.id)) {
           doc.isProcessed = true;
         }
-      }
-    },
-    saveExtractedContent(
-      state,
-      action: PayloadAction<{ tabId: number; data: ExtractedContent }>
-    ) {
-      const tabState = state[action.payload.tabId];
-
-      if (!tabState?.data || tabState?.data.pageType !== "search") {
-        return { ...state };
-      }
-
-      tabState.data.extractedContent.push(action.payload.data);
-      const targetDoc = tabState.data.documents.find(
-        (doc) => doc.id === action.payload.data.documentId
-      );
-      if (targetDoc) {
-        targetDoc.isProcessed = true;
       }
     },
     searchFinishedSuccess(

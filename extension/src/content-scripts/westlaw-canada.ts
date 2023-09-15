@@ -111,7 +111,6 @@ async function pageHandler(): Promise<void> {
         title: anchor.innerText,
         isProcessed: false,
       })),
-      extractedContent: [],
       similaritySearchResults: {},
     };
   }
@@ -148,11 +147,6 @@ port.onMessage.addListener(async (message: Message) => {
           )
         );
       });
-
-      await Promise.all(promises);
-      port.postMessage({
-        type: "extraction-finished",
-      } as Message);
   }
 });
 
