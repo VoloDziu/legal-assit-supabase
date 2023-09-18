@@ -26,21 +26,28 @@ export interface Database {
           content: string;
           document_id: string;
           embeddings: number[];
-          id: string;
+          id: number;
         };
         Insert: {
           content: string;
           document_id: string;
           embeddings: number[];
-          id: string;
+          id?: number;
         };
         Update: {
           content?: string;
           document_id?: string;
           embeddings?: number[];
-          id?: string;
+          id?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "paragraphs_document_id_fkey";
+            columns: ["document_id"];
+            referencedRelation: "documents";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: {
@@ -49,7 +56,7 @@ export interface Database {
     Functions: {
       get_n_similar_paragraphs: {
         Args: {
-          target_document_id: string;
+          target_document_ids: string[];
           query_embeddings: number[];
           n: number;
         };

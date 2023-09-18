@@ -111,7 +111,7 @@ async function pageHandler(): Promise<void> {
         title: anchor.innerText,
         isProcessed: false,
       })),
-      similaritySearchResults: {},
+      searchResults: [],
     };
   }
 

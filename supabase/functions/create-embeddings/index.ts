@@ -1,63 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { supabase, corsHeaders } from "../supabase.ts";
 import { bulkEmbed } from "../ai-openai.ts";
-import {
-  EmbeddingsResult,
-  ExtractedContent,
-} from "../../../extension/src/models.ts";
+import { ExtractedContent } from "../../../extension/src/models.ts";
 
-async function processDocument(
-  doc: ExtractedContent
-): Promise<EmbeddingsResult> {
+async function processDocument(content: ExtractedContent): Promise<void> {
   let embeddings: number[][];
   try {
-    embeddings = await bulkEmbed(doc.paragraphs);
-  } catch (embeddingError) {
-    return {
-      documentId: doc.documentId,
-      success: false,
-      message: `failed create embeddings for ${doc.documentId}`,
-      error: embeddingError,
-    };
+    embeddings = await bulkEmbed(content.paragraphs);
+  } catch {
+    throw new Error(`could not create embeddings for ${content.documentId}`);
   }
 
   const { error: docInsertError } = await supabase
     .from("documents")
-    .upsert({ id: doc.documentId });
+    .upsert({ id: content.documentId });
 
   if (docInsertError) {
-    return {
-      documentId: doc.documentId,
-      success: false,
-      message: `failed to save document ${doc.documentId}`,
-      error: docInsertError,
-    };
+    throw new Error(`failed to save document ${content.documentId}`);
   }
 
   const { error: paragraphInsertError } = await supabase
     .from("paragraphs")
     .upsert(
-      doc.paragraphs.map((paragraph, index) => ({
-        id: `${doc.documentId}-${index}`,
-        document_id: doc.documentId,
+      content.paragraphs.map((paragraph, index) => ({
+        document_id: content.documentId,
         content: paragraph,
         embeddings: embeddings[index],
       }))
     );
 
   if (paragraphInsertError) {
-    return {
-      documentId: doc.documentId,
-      success: false,
-      message: `failed to save paragraphs for ${doc.documentId}`,
-      error: paragraphInsertError,
-    };
+    throw new Error(`failed to save paragraphs for ${content.documentId}`);
   }
 
-  return {
-    documentId: doc.documentId,
-    success: true,
-  };
+  return;
 }
 
 serve(async (req) => {
@@ -65,24 +41,27 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  let content: ExtractedContent;
   try {
-    const { docs }: { docs: ExtractedContent[] } = await req.json();
-    const docPromises: Promise<EmbeddingsResult>[] = [];
-
-    docs.forEach((d) => {
-      docPromises.push(processDocument(d));
+    content = await req.json();
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message || "error" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
     });
+  }
 
-    const results = await Promise.all(docPromises);
+  try {
+    const result = await processDocument(content);
 
-    return new Response(JSON.stringify(results), {
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error.message || "error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
+      status: 500,
     });
   }
 });

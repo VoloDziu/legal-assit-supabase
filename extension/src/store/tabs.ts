@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ExtractedContent, SummaryResult } from "../models";
+import { SearchResult } from "../models";
 
 export interface Document {
   id: string;
@@ -13,7 +13,7 @@ interface SearchTabData {
   query: string;
   status: "loading" | "idle" | "error";
   documents: Document[];
-  similaritySearchResults: { [documentId: string]: SummaryResult };
+  searchResults: SearchResult[];
 }
 
 export type TabData = SearchTabData;
@@ -70,7 +70,7 @@ export const tabsSlice = createSlice({
       }
 
       tabState.data.query = action.payload.query;
-      tabState.data.similaritySearchResults = {};
+      tabState.data.searchResults = [];
       tabState.data.status = "loading";
     },
     markDocumentsAsProcessed(
@@ -93,7 +93,7 @@ export const tabsSlice = createSlice({
       state,
       action: PayloadAction<{
         tabId: number;
-        results: SummaryResult[];
+        results: SearchResult[];
       }>
     ) {
       const tabState = state[action.payload.tabId];
@@ -102,9 +102,7 @@ export const tabsSlice = createSlice({
         return { ...state };
       }
 
-      for (const result of action.payload.results) {
-        tabState.data.similaritySearchResults[result.documentId] = result;
-      }
+      tabState.data.searchResults = action.payload.results;
       tabState.data.status = "idle";
     },
     sesarchFinishedError(

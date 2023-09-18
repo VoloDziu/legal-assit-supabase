@@ -2,7 +2,11 @@ import { PayloadAction } from "@reduxjs/toolkit";
 import { tabsSlice } from "./store/tabs";
 import { store } from "./store/store";
 import { allDocumentsExtracted, selectTabState } from "./store/selectors";
-import { createEmbeddings, apiSummaries, checkExistingDocuments } from "./api";
+import {
+  apiCreateEmbeddings,
+  apiSimilaritySearch,
+  apiCheckExistingDocuments,
+} from "./api";
 import { Connections, Message } from "./messaging";
 
 let sidePanelPort: chrome.runtime.Port | undefined;
@@ -30,7 +34,7 @@ async function sendStateToApp(tabId: number) {
   return;
 }
 
-async function generateSummaries(tabId: number) {
+async function similaritySearch(tabId: number) {
   const tabSearchData = selectTabState(tabId)?.data;
 
   if (!tabSearchData) {
@@ -39,7 +43,7 @@ async function generateSummaries(tabId: number) {
   }
 
   try {
-    const response = await apiSummaries(
+    const response = await apiSimilaritySearch(
       tabSearchData.documents.map((doc) => doc.id),
       tabSearchData.query
     );
@@ -120,7 +124,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
 
             const previouslyProcessedDocumentIds = (
-              await checkExistingDocuments(
+              await apiCheckExistingDocuments(
                 tabState.data.documents.map((d) => d.id)
               )
             ).map((doc) => doc.id);
@@ -132,7 +136,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
 
             if (allDocumentsExtracted(tab.id)) {
-              generateSummaries(tab.id);
+              similaritySearch(tab.id);
             } else {
               tabPort.postMessage({
                 type: "start-extraction",
@@ -179,7 +183,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
             return;
           case "document-extracted":
-            await createEmbeddings([message.data]);
+            await apiCreateEmbeddings([message.data]);
 
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({
@@ -189,7 +193,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
 
             if (allDocumentsExtracted(tabId)) {
-              generateSummaries(tabId);
+              similaritySearch(tabId);
             }
             return;
         }
