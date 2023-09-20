@@ -3,7 +3,11 @@ import { corsHeaders, supabase } from "../supabase.ts";
 import { embed, summarize } from "../ai-openai.ts";
 import { SearchResult } from "../../../extension/src/models.ts";
 
-async function getSimilarParagraphs(documentIds: string[], query: string) {
+async function getSimilarParagraphs(
+  documentIds: string[],
+  query: string,
+  n: number
+) {
   let queryEmbedding: number[] = [];
   try {
     queryEmbedding = await embed(query);
@@ -14,7 +18,7 @@ async function getSimilarParagraphs(documentIds: string[], query: string) {
   const { data, error } = await supabase.rpc("get_n_similar_paragraphs", {
     target_document_ids: documentIds,
     query_embeddings: queryEmbedding,
-    n: 10,
+    n,
   });
 
   if (error) {
@@ -33,7 +37,7 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  let request: { documentIds: string[]; query: string };
+  let request: { documentIds: string[]; query: string; n: number };
   try {
     request = await req.json();
   } catch (error) {
@@ -52,7 +56,8 @@ serve(async (req) => {
   try {
     similarParagraphs = await getSimilarParagraphs(
       request.documentIds,
-      request.query
+      request.query,
+      request.n
     );
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message || "error" }), {
@@ -72,10 +77,10 @@ serve(async (req) => {
     documentContexts[paragraph.document_id].push(paragraph.content);
   }
 
-  let summaries: string[];
+  let aiResponse: string;
   try {
-    summaries = await summarize(
-      documentContextIds.map((id) => documentContexts[id].join("; ")),
+    aiResponse = await summarize(
+      documentContextIds.map((id) => documentContexts[id].join("\n")),
       request.query
     );
   } catch (error) {
@@ -85,9 +90,19 @@ serve(async (req) => {
     });
   }
 
+  let summaries: string[];
+  try {
+    summaries = JSON.parse(aiResponse);
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message || "error" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+
   const results: SearchResult[] = documentContextIds.map((id, index) => ({
     documentId: id,
-    summary: summaries[index],
+    summary: summaries[index] || "",
     paragraphs: documentContexts[id],
   }));
 

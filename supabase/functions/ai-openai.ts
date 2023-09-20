@@ -24,11 +24,13 @@ export async function bulkEmbed(texts: string[]): Promise<number[][]> {
 export async function summarize(
   documentContexts: string[],
   query: string
-): Promise<string[]> {
+): Promise<string> {
+  const content = summarizationPrompt(documentContexts, query);
+
   const chatCompletion = await openai.chat.completions.create({
     messages: [
       {
-        content: summarizationPrompt(documentContexts, query),
+        content,
         role: "user",
       },
     ],
@@ -37,5 +39,7 @@ export async function summarize(
   });
   const answer = chatCompletion.choices[0].message.content;
 
-  return answer ? JSON.parse(answer) : [];
+  const result = answer ? answer : "[]";
+
+  return result;
 }

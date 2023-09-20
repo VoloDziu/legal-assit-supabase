@@ -11,8 +11,8 @@ const SUPABASE_ANON_KEY =
 //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
 
 export async function apiCreateEmbeddings(
-  docs: ExtractedContent[]
-): Promise<{ documentId: string; success: boolean }[]> {
+  docs: ExtractedContent
+): Promise<void> {
   const result = await fetch(`${API_URL}/create-embeddings/`, {
     method: "POST",
     body: JSON.stringify({
