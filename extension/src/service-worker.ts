@@ -4,7 +4,7 @@ import { store } from "./store/store";
 import { allDocumentsExtracted, selectTabState } from "./store/selectors";
 import {
   apiCreateEmbeddings,
-  apiSimilaritySearch,
+  apiSearch,
   apiCheckExistingDocuments,
 } from "./api";
 import { Connections, Message } from "./messaging";
@@ -34,7 +34,7 @@ async function sendStateToApp(tabId: number) {
   return;
 }
 
-async function similaritySearch(tabId: number) {
+async function search(tabId: number) {
   const tabSearchData = selectTabState(tabId)?.data;
 
   if (!tabSearchData) {
@@ -43,7 +43,7 @@ async function similaritySearch(tabId: number) {
   }
 
   try {
-    const response = await apiSimilaritySearch(
+    const response = await apiSearch(
       tabSearchData.documents.map((doc) => doc.id),
       tabSearchData.query
     );
@@ -136,7 +136,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
 
             if (allDocumentsExtracted(tab.id)) {
-              similaritySearch(tab.id);
+              search(tab.id);
             } else {
               tabPort.postMessage({
                 type: "start-extraction",
@@ -183,7 +183,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
             return;
           case "document-extracted":
-            await apiCreateEmbeddings([message.data]);
+            await apiCreateEmbeddings(message.data);
 
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({
@@ -193,7 +193,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             );
 
             if (allDocumentsExtracted(tabId)) {
-              similaritySearch(tabId);
+              search(tabId);
             }
             return;
         }

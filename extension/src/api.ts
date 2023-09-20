@@ -26,7 +26,7 @@ export async function apiCreateEmbeddings(
   return await result.json();
 }
 
-export async function apiSimilaritySearch(
+export async function apiSearch(
   documentIds: string[],
   query: string
 ): Promise<SearchResult[]> {

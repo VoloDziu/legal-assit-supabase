@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, supabase } from "../supabase.ts";
 import { embed, summarize } from "../ai-openai.ts";
 import { SearchResult } from "../../../extension/src/models.ts";
+import { NO_MATCH_STRING } from "../prompts.ts";
 
 async function getSimilarParagraphs(
   documentIds: string[],
@@ -100,11 +101,19 @@ serve(async (req) => {
     });
   }
 
-  const results: SearchResult[] = documentContextIds.map((id, index) => ({
-    documentId: id,
-    summary: summaries[index] || "",
-    paragraphs: documentContexts[id],
-  }));
+  const results: SearchResult[] = documentContextIds.map((id, index) => {
+    let summary = summaries[index];
+
+    if (!summary || summary === NO_MATCH_STRING) {
+      summary = "";
+    }
+
+    return {
+      documentId: id,
+      summary,
+      paragraphs: documentContexts[id],
+    };
+  });
 
   return new Response(JSON.stringify(results), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
