@@ -102,7 +102,10 @@ export const tabsSlice = createSlice({
         return { ...state };
       }
 
-      tabState.data.searchResults = action.payload.results;
+      console.log(action.payload.results);
+      tabState.data.searchResults = action.payload.results.filter(
+        (r) => !!r.summary
+      );
       tabState.data.status = "idle";
     },
     sesarchFinishedError(

@@ -41,7 +41,7 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  let content: ExtractedContent;
+  let content: { document: ExtractedContent };
   try {
     content = await req.json();
   } catch (error) {
@@ -52,7 +52,7 @@ serve(async (req) => {
   }
 
   try {
-    const result = await processDocument(content);
+    const result = await processDocument(content.document);
 
     return new Response(JSON.stringify(result), {
       status: 200,

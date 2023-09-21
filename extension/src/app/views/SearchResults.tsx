@@ -4,6 +4,12 @@ import { SearchResultsItem } from "../components/SearcjResultsItem";
 import { TabState } from "../../store/tabs";
 import { Message } from "../../messaging";
 
+function capitalizeFirstLetter(word: string) {
+  const firstChar = word.charAt(0).toUpperCase();
+  const remainingChars = word.slice(1);
+  return `${firstChar}${remainingChars}`;
+}
+
 interface Props {
   state: TabState;
   port?: chrome.runtime.Port;
@@ -21,12 +27,6 @@ export function SearchResultsView({ state, port }: Props) {
     ? capitalizeFirstLetter(state.origin)
     : "LegalAssist";
 
-  function capitalizeFirstLetter(word: string) {
-    const firstChar = word.charAt(0).toUpperCase();
-    const remainingChars = word.slice(1);
-    return `${firstChar}${remainingChars}`;
-  }
-
   let content;
 
   if (state.data?.status === "loading") {
@@ -35,13 +35,13 @@ export function SearchResultsView({ state, port }: Props) {
 
   if (
     state.data?.status === "idle" &&
-    Object.values(state.data.similaritySearchResults).length > 0
+    Object.values(state.data.searchResults).length > 0
   ) {
-    content = state.data.documents.map((doc) => (
+    content = state.data.searchResults.map((result, index) => (
       <SearchResultsItem
-        document={doc}
-        summary={state.data?.similaritySearchResults[doc.id]}
-        key={doc.id}
+        item={result}
+        document={state.data!.documents.find((d) => d.id === result.documentId)}
+        key={index}
       />
     ));
   }
