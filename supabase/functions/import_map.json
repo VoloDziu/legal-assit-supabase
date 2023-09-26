@@ -2,6 +2,7 @@
   "imports": {
     "supabase": "https://esm.sh/@supabase/supabase-js@2.33.1",
     "openai": "https://esm.sh/openai@4.4.0",
-    "transformers": "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.5.0"
+    "transformers": "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.5.0",
+    "gpt-tokenizer": "https://esm.sh/gpt-tokenizer@2.1.1"
   }
 }

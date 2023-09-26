@@ -2,11 +2,33 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { supabase, corsHeaders } from "../supabase.ts";
 import { bulkEmbed } from "../ai-openai.ts";
 import { ExtractedContent } from "../../../extension/src/models.ts";
+import { isWithinTokenLimit } from "gpt-tokenizer";
+
+const EMBEDDING_CHUNK_TOKENS_LIMIT = 500;
 
 async function processDocument(content: ExtractedContent): Promise<void> {
   let embeddings: number[][];
+
+  const embeddingChunks: string[] = [];
+
+  let chunk = "";
+  for (let i = 0; i < content.paragraphs.length; i++) {
+    chunk = chunk
+      ? `${chunk} \n ${content.paragraphs[i]}`
+      : content.paragraphs[i];
+
+    if (!isWithinTokenLimit(chunk, EMBEDDING_CHUNK_TOKENS_LIMIT)) {
+      embeddingChunks.push(chunk);
+      chunk = "";
+    }
+  }
+
+  if (chunk.length > 0) {
+    embeddingChunks.push(chunk);
+  }
+
   try {
-    embeddings = await bulkEmbed(content.paragraphs);
+    embeddings = await bulkEmbed(embeddingChunks);
   } catch {
     throw new Error(`could not create embeddings for ${content.documentId}`);
   }
@@ -22,9 +44,9 @@ async function processDocument(content: ExtractedContent): Promise<void> {
   const { error: paragraphInsertError } = await supabase
     .from("paragraphs")
     .upsert(
-      content.paragraphs.map((paragraph, index) => ({
+      embeddingChunks.map((chunk, index) => ({
         document_id: content.documentId,
-        content: paragraph,
+        content: chunk,
         embeddings: embeddings[index],
       }))
     );
@@ -41,7 +63,7 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  let content: { document: ExtractedContent };
+  let content: ExtractedContent;
   try {
     content = await req.json();
   } catch (error) {
@@ -52,9 +74,9 @@ serve(async (req) => {
   }
 
   try {
-    const result = await processDocument(content.document);
+    await processDocument(content);
 
-    return new Response(JSON.stringify(result), {
+    return new Response("", {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
