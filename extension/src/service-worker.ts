@@ -65,10 +65,6 @@ function dispatch(action: PayloadAction<any>) {
   store.dispatch(action);
 }
 
-chrome.sidePanel
-  .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((error) => console.error(error));
-
 chrome.tabs.onActivated.addListener((info) => {
   sendStateToApp(info.tabId);
 });

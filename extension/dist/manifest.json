@@ -3,15 +3,7 @@
   "name": "Legal Assist",
   "description": "AI assistant that empowers your legal research",
   "version": "1.0",
-  "icons": {
-    "16": "./assets/icon.png",
-    "48": "./assets/icon.png",
-    "128": "./assets/icon.png"
-  },
-  "action": {
-    "default_title": "Click to open the assistant panel"
-  },
-  "permissions": ["tabs", "sidePanel"],
+  "permissions": ["tabs"],
   "background": {
     "service_worker": "./build/service-worker.js"
   },
@@ -24,8 +16,14 @@
       "run_at": "document_start"
     }
   ],
-  "side_panel": {
-    "default_path": "./build/app/index.html"
+  "action": {
+    "default_icon": {
+      "16": "./assets/icon.png",
+      "48": "./assets/icon.png",
+      "128": "./assets/icon.png"
+    },
+    "default_title": "Click to open the assistant",
+    "default_popup": "./build/app/index.html"
   },
   "host_permissions": [
     "https://legal-assistant-pptqcreaba-uc.a.run.app/*"
