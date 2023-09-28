@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { SearchResult } from "../../models";
 import { Document } from "../../store/tabs";
 
@@ -7,6 +8,8 @@ interface Props {
 }
 
 export function SearchResultsItem({ item, document }: Props) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className="bg-white p-3 mb-3">
       <a
@@ -18,6 +21,21 @@ export function SearchResultsItem({ item, document }: Props) {
       </a>
 
       <div className="text-xs">{item.summary}</div>
+
+      <button
+        onClick={() => setExpanded((expanded) => !expanded)}
+        className="underline"
+      >
+        {expanded ? "collapse" : "expand"}
+      </button>
+
+      {expanded
+        ? item.paragraphs.map((p, i) => (
+            <div key={i} className="text-xs mb-1">
+              {p}
+            </div>
+          ))
+        : ""}
     </div>
   );
 }
