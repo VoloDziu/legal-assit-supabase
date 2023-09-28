@@ -15,9 +15,7 @@ export async function apiCreateEmbeddings(
 ): Promise<void> {
   const result = await fetch(`${API_URL}/create-embeddings/`, {
     method: "POST",
-    body: JSON.stringify({
-      document,
-    }),
+    body: JSON.stringify(document),
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
@@ -29,7 +27,7 @@ export async function apiCreateEmbeddings(
 export async function apiSearch(
   documentIds: string[],
   query: string,
-  n = 15
+  n = 5
 ): Promise<SearchResult[]> {
   const result = await fetch(`${API_URL}/search/`, {
     method: "POST",

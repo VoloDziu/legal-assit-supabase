@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { summarizationPrompt } from "./prompts.ts";
+import { encode } from "gpt-tokenizer";
 
 export const openai = new OpenAI();
 
@@ -26,6 +27,7 @@ export async function summarize(
   query: string
 ): Promise<string> {
   const content = summarizationPrompt(documentContexts, query);
+  console.log(`prompt tokens: ${encode(content).length}`);
 
   const chatCompletion = await openai.chat.completions.create({
     messages: [
