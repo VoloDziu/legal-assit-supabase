@@ -1,6 +1,6 @@
 import { FormEventHandler, useState } from "react";
 import { SearchResultsLoading } from "../components/SearchResultsLoading";
-import { SearchResultsItem } from "../components/SearcjResultsItem";
+import { SearchResultsItem } from "../components/SearchResultsItem";
 import { TabState } from "../../store/tabs";
 import { Message } from "../../messaging";
 
