@@ -6,7 +6,6 @@ import { DefaultView } from "./views/Default";
 import { TabState } from "../store/tabs";
 import { Connections, Message } from "../messaging";
 import { mockLoadingState } from "./mockState";
-import { Layout } from "./components/Layout";
 
 function App() {
   const [appState, setAppState] = useState<TabState | undefined>();
@@ -32,7 +31,20 @@ function App() {
     }
   }, []);
 
-  return <Layout />;
+  return (
+    <div className="w-[600px] h-[600px] flex flex-col">
+      <div className="py-4 px-8 bg-neutral flex gap-3 flex-shrink-0">
+        <input
+          type="text"
+          placeholder="Enter a semantic search query"
+          className="flex-grow input input-sm input-bordered w-full"
+        />
+        <button className="flex-shrink-0 btn btn-primary btn-sm">Search</button>
+      </div>
+
+      <div className="flex-grow flex-shrink"></div>
+    </div>
+  );
 
   if (!appState || !appState.origin) {
     return <NotSupportedView />;

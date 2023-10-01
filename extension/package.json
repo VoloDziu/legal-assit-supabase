@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "clean": "rm -rf ./dist/build",
-    "build": "npm run clean && node ./build.mjs"
+    "build": "npm run clean && node ./build.mjs",
+    "serve": "./node_modules/.bin/parcel src/app/index.html --dist-dir ./dist/build/app"
   },
   "author": "",
   "license": "ISC",
@@ -22,8 +23,9 @@
     "@types/node": "^16.18.40",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
+    "daisyui": "^3.8.2",
     "parcel": "^2.9.3",
-    "postcss": "^8.4.27",
+    "postcss": "^8.4.31",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.1.6"
   }
