@@ -11,7 +11,7 @@ const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
 
 export async function apiCreateEmbeddings(
-  document: ExtractedContent
+  document: ExtractedContent,
 ): Promise<void> {
   const result = await fetch(`${API_URL}/create-embeddings/`, {
     method: "POST",
@@ -27,7 +27,7 @@ export async function apiCreateEmbeddings(
 export async function apiSearch(
   documentIds: string[],
   query: string,
-  n = 5
+  n = 5,
 ): Promise<SearchResult[]> {
   const result = await fetch(`${API_URL}/search/`, {
     method: "POST",
@@ -45,7 +45,7 @@ export async function apiSearch(
 }
 
 export async function apiCheckExistingDocuments(
-  documentIds: string[]
+  documentIds: string[],
 ): Promise<{ id: string }[]> {
   const result = await fetch(`${API_URL}/check-existing/`, {
     method: "POST",

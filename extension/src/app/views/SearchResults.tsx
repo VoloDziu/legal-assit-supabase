@@ -1,8 +1,8 @@
 import { FormEventHandler, useState } from "react";
-import { SearchResultsLoading } from "../components/SearchResultsLoading";
-import { SearchResultsItem } from "../components/SearchResultsItem";
-import { TabState } from "../../store/tabs";
 import { Message } from "../../messaging";
+import { TabState } from "../../store/tabs";
+import { SearchResultsItem } from "../components/SearchResultsItem";
+import { SearchResultsLoading } from "../components/SearchResultsLoading";
 
 function capitalizeFirstLetter(word: string) {
   const firstChar = word.charAt(0).toUpperCase();
@@ -47,14 +47,14 @@ export function SearchResultsView({ state, port }: Props) {
   }
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-stretch py-12 px-4">
-      <div className="text-2xl font-semibold text-center mb-4">{title}</div>
+    <div className="flex min-h-screen w-screen flex-col items-stretch px-4 py-12">
+      <div className="mb-4 text-center text-2xl font-semibold">{title}</div>
 
       <form className="mb-4" onSubmit={submit}>
         <div className="mb-2">Refine your results with semantic search.</div>
         <textarea
           disabled={state.data?.status === "loading"}
-          className="text-sm w-full border rounded-sm mb-1 p-2 border-slate-400 disabled:bg-slate-100 disabled:text-slate-400 transition-all"
+          className="mb-1 w-full rounded-sm border border-slate-400 p-2 text-sm transition-all disabled:bg-slate-100 disabled:text-slate-400"
           name="question"
           placeholder="e.g., application was granted in part"
           value={query}
@@ -63,7 +63,7 @@ export function SearchResultsView({ state, port }: Props) {
         ></textarea>
 
         <button
-          className="block w-full text-sm rounded-sm text-white font-medium bg-blue-700 py-2 hover:bg-blue-800 active:bg-blue-900 disabled:bg-slate-400 transition-all"
+          className="block w-full rounded-sm bg-blue-700 py-2 text-sm font-medium text-white transition-all hover:bg-blue-800 active:bg-blue-900 disabled:bg-slate-400"
           disabled={state.data?.status === "loading"}
         >
           search in documents

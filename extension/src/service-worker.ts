@@ -1,13 +1,13 @@
 import { PayloadAction } from "@reduxjs/toolkit";
-import { tabsSlice } from "./store/tabs";
-import { store } from "./store/store";
-import { allDocumentsExtracted, selectTabState } from "./store/selectors";
 import {
+  apiCheckExistingDocuments,
   apiCreateEmbeddings,
   apiSearch,
-  apiCheckExistingDocuments,
 } from "./api";
 import { Connections, Message } from "./messaging";
+import { allDocumentsExtracted, selectTabState } from "./store/selectors";
+import { store } from "./store/store";
+import { tabsSlice } from "./store/tabs";
 
 let sidePanelPort: chrome.runtime.Port | undefined;
 const tabPorts: { [id: string]: chrome.runtime.Port } = {};
@@ -45,14 +45,14 @@ async function search(tabId: number) {
   try {
     const response = await apiSearch(
       tabSearchData.documents.map((doc) => doc.id),
-      tabSearchData.query
+      tabSearchData.query,
     );
 
     dispatch(
       tabsSlice.actions.searchFinishedSuccess({
         tabId,
         results: response,
-      })
+      }),
     );
   } catch (e: unknown) {
     console.error("Error", e);
@@ -116,19 +116,19 @@ chrome.runtime.onConnect.addListener(async function (port) {
               tabsSlice.actions.startSearchSession({
                 tabId: tab.id,
                 query: message.query,
-              })
+              }),
             );
 
             const previouslyProcessedDocumentIds = (
               await apiCheckExistingDocuments(
-                tabState.data.documents.map((d) => d.id)
+                tabState.data.documents.map((d) => d.id),
               )
             ).map((doc) => doc.id);
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({
                 tabId: tab.id,
                 documentIds: previouslyProcessedDocumentIds,
-              })
+              }),
             );
 
             if (allDocumentsExtracted(tab.id)) {
@@ -167,7 +167,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
         switch (message.type) {
           case "tab-opened":
             dispatch(
-              tabsSlice.actions.createTab({ tabId, origin: message.origin })
+              tabsSlice.actions.createTab({ tabId, origin: message.origin }),
             );
             return;
           case "tab-loaded":
@@ -175,7 +175,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
               tabsSlice.actions.updateTab({
                 tabId,
                 data: message.data,
-              })
+              }),
             );
             return;
           case "document-extracted":
@@ -185,7 +185,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
               tabsSlice.actions.markDocumentsAsProcessed({
                 tabId,
                 documentIds: [message.data.documentId],
-              })
+              }),
             );
 
             if (allDocumentsExtracted(tabId)) {

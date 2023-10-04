@@ -10,9 +10,7 @@
   "content_scripts": [
     {
       "js": ["./build/content-scripts/westlaw-canada.js"],
-      "matches": [
-        "https://nextcanada-westlaw-com.libaccess.lib.mcmaster.ca/*"
-      ],
+      "matches": ["https://nextcanada-westlaw-com.libaccess.lib.mcmaster.ca/*"],
       "run_at": "document_start"
     }
   ],
@@ -25,9 +23,7 @@
     "default_title": "Click to open the assistant",
     "default_popup": "./build/app/index.html"
   },
-  "host_permissions": [
-    "https://legal-assistant-pptqcreaba-uc.a.run.app/*"
-  ],
+  "host_permissions": ["https://legal-assistant-pptqcreaba-uc.a.run.app/*"],
   "commands": {
     "_execute_action": {
       "suggested_key": {

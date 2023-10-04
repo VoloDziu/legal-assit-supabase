@@ -11,7 +11,7 @@ function getSearchQuery(location: Location): string | null {
   }
 
   return `westlaw ${query} ${searchParams.get("startIndex")} ${searchParams.get(
-    "contentType"
+    "contentType",
   )}`;
 }
 
@@ -43,7 +43,7 @@ function getDocumentId(href: string): string {
 }
 
 function getDocumentParagraphsFromAnchor(
-  anchor: HTMLAnchorElement
+  anchor: HTMLAnchorElement,
 ): Promise<string[]> {
   return new Promise((resolve) => {
     const iframe = document.createElement("iframe");
@@ -62,7 +62,7 @@ function getDocumentParagraphsFromAnchor(
       iframe.remove();
 
       const paragraphs = doc?.querySelectorAll<HTMLElement>(
-        ":is(.co_paragraph, .co_paragraphText):not(:has(.co_paragraph, .co_paragraphText))"
+        ":is(.co_paragraph, .co_paragraphText):not(:has(.co_paragraph, .co_paragraphText))",
       );
 
       resolve(Array.from(paragraphs || []).map((p) => p.innerText));
@@ -74,12 +74,12 @@ function getDocumentParagraphsFromAnchor(
 }
 
 async function getDocumentAnchors(
-  doc: Document
+  doc: Document,
 ): Promise<NodeListOf<HTMLAnchorElement>> {
   return new Promise((resolve) => {
     function getAnchors() {
       const searchResults = doc.querySelectorAll<HTMLAnchorElement>(
-        ".co_searchContent h3 a"
+        ".co_searchContent h3 a",
       );
 
       if (searchResults.length > 0) {
@@ -143,8 +143,8 @@ port.onMessage.addListener(async (message: Message) => {
                 documentId,
                 paragraphs,
               },
-            } as Message)
-          )
+            } as Message),
+          ),
         );
       });
   }

@@ -45,7 +45,7 @@ export const tabsSlice = createSlice({
       action: PayloadAction<{
         tabId: number;
         data?: TabData;
-      }>
+      }>,
     ) {
       const tabState = state[action.payload.tabId];
 
@@ -61,7 +61,7 @@ export const tabsSlice = createSlice({
     // only on "search" type pages
     startSearchSession(
       state,
-      action: PayloadAction<{ tabId: number; query: string }>
+      action: PayloadAction<{ tabId: number; query: string }>,
     ) {
       const tabState = state[action.payload.tabId];
 
@@ -75,7 +75,7 @@ export const tabsSlice = createSlice({
     },
     markDocumentsAsProcessed(
       state,
-      action: PayloadAction<{ tabId: number; documentIds: string[] }>
+      action: PayloadAction<{ tabId: number; documentIds: string[] }>,
     ) {
       const tabState = state[action.payload.tabId];
 
@@ -94,7 +94,7 @@ export const tabsSlice = createSlice({
       action: PayloadAction<{
         tabId: number;
         results: SearchResult[];
-      }>
+      }>,
     ) {
       const tabState = state[action.payload.tabId];
 
@@ -104,7 +104,7 @@ export const tabsSlice = createSlice({
 
       console.log(action.payload.results);
       tabState.data.searchResults = action.payload.results.filter(
-        (r) => !!r.summary
+        (r) => !!r.summary,
       );
       tabState.data.status = "idle";
     },
@@ -113,7 +113,7 @@ export const tabsSlice = createSlice({
       action: PayloadAction<{
         tabId: number;
         error: string;
-      }>
+      }>,
     ) {
       const tabState = state[action.payload.tabId];
 

@@ -11,11 +11,11 @@ export function SearchResultsItem({ item, document }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-white p-3 mb-3">
+    <div className="mb-3 bg-white p-3">
       <a
         href={document!.url}
         onClick={() => chrome.tabs.create({ url: document!.url })}
-        className="block mb-3 underline"
+        className="mb-3 block underline"
       >
         {document!.title}
       </a>
@@ -31,7 +31,7 @@ export function SearchResultsItem({ item, document }: Props) {
 
       {expanded
         ? item.paragraphs.map((p, i) => (
-            <div key={i} className="text-xs mb-1">
+            <div key={i} className="mb-1 text-xs">
               {p}
             </div>
           ))

@@ -16,12 +16,12 @@ export function DefaultView({ state }: Props) {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col items-stretch py-12 px-4">
-      <div className="text-slate-950 text-2xl font-semibold text-center mb-4">
+    <div className="flex h-screen w-screen flex-col items-stretch px-4 py-12">
+      <div className="mb-4 text-center text-2xl font-semibold text-slate-950">
         {title}
       </div>
 
-      <div className="bg-white shadow-sm rounded-sm p-4">
+      <div className="rounded-sm bg-white p-4 shadow-sm">
         <div className="mb-4">Welcome to LegalAssist!</div>
         <div>
           Start by searching the library. LegalAssist will then help you refine
