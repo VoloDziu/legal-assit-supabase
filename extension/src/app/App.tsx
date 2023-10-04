@@ -153,7 +153,7 @@ function App() {
   // );
 
   return (
-    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-2 gap-y-3 pb-3">
+    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
       <div className="col-span-2 flex gap-3 border-b bg-accent px-3 py-3">
         <Input placeholder="E.g., a person was found in a possesison of a firearm" />
 
@@ -174,8 +174,8 @@ function App() {
         </div>
       </ScrollArea>
 
-      <div className="flex flex-col overflow-hidden border-l">
-        <div className="flex flex-shrink-0 items-center pl-5 pr-1">
+      <div className="flex flex-col overflow-hidden border-l pr-1">
+        <div className="flex flex-shrink-0 items-center pl-5">
           <div className="mr-4 truncate text-base font-bold">
             Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolorum
             nulla mollitia harum eveniet
@@ -190,7 +190,7 @@ function App() {
           </Button>
         </div>
 
-        <ScrollArea className="flex-grow-1 pl-5 pr-3">
+        <ScrollArea className="flex-grow-1 pl-5 pr-2">
           <div className="mb-1 text-sm">Summary:</div>
 
           <div className="mb-5 text-sm text-muted-foreground">
