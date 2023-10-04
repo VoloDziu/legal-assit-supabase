@@ -6,6 +6,7 @@ import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { ListItem } from "./components/ui/list";
 import { ScrollArea } from "./components/ui/scroll-area";
+import { cn } from "./lib/utils";
 import { mockLoadingState } from "./mockState";
 import { DefaultView } from "./views/Default";
 import { LoadingView } from "./views/Loading";
@@ -15,7 +16,7 @@ import { SearchResultsView } from "./views/SearchResults";
 function App() {
   const [appState, setAppState] = useState<TabState | undefined>();
   const [port, setPort] = useState<chrome.runtime.Port>();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") {
@@ -152,28 +153,10 @@ function App() {
   //   </div>
   // );
 
-  return (
-    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
-      <div className="col-span-2 flex gap-3 border-b bg-accent px-3 py-3">
-        <Input placeholder="E.g., a person was found in a possesison of a firearm" />
+  let expandedView;
 
-        <Button>Search</Button>
-      </div>
-
-      <ScrollArea className="px-3">
-        <div className="flex flex-col gap-1">
-          {data.map((d, index) => (
-            <ListItem
-              key={index}
-              active={index === 1}
-              title={d.title}
-              summary={d.summary}
-              onClick={() => {}}
-            />
-          ))}
-        </div>
-      </ScrollArea>
-
+  if (selected !== null) {
+    expandedView = (
       <div className="flex flex-col overflow-hidden border-l pr-1">
         <div className="flex flex-shrink-0 items-center pl-5">
           <div className="mr-4 truncate text-base font-bold">
@@ -185,7 +168,12 @@ function App() {
             <ExternalLinkIcon />
           </Button>
 
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0"
+            onClick={() => setSelected(null)}
+          >
             <Cross1Icon />
           </Button>
         </div>
@@ -224,6 +212,33 @@ function App() {
           </div>
         </ScrollArea>
       </div>
+    );
+  }
+
+  return (
+    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
+      <div className="col-span-2 flex gap-3 border-b bg-accent px-3 py-3">
+        <Input placeholder="E.g., a person was found in a possesison of a firearm" />
+
+        <Button>Search</Button>
+      </div>
+
+      <ScrollArea className={cn("px-3", selected === null && "col-span-2")}>
+        <div className="flex flex-col gap-1">
+          {data.map((d, index) => (
+            <ListItem
+              onClick={() => setSelected(index)}
+              key={index}
+              active={index === selected}
+              title={d.title}
+              expanded={selected === null}
+              summary={d.summary}
+            />
+          ))}
+        </div>
+      </ScrollArea>
+
+      {expandedView}
     </div>
   );
 
