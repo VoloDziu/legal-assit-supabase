@@ -1,5 +1,6 @@
 import { Cross1Icon, ExternalLinkIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
+import { PuffLoader } from "react-spinners";
 import { Connections, Message } from "../messaging";
 import { TabState } from "../store/tabs";
 import { Button } from "./components/ui/button";
@@ -13,10 +14,18 @@ import { LoadingView } from "./views/Loading";
 import { NotSupportedView } from "./views/NotSupported";
 import { SearchResultsView } from "./views/SearchResults";
 
+interface Result {
+  title: string;
+  summary: string;
+}
+
 function App() {
   const [appState, setAppState] = useState<TabState | undefined>();
   const [port, setPort] = useState<chrome.runtime.Port>();
+
   const [selected, setSelected] = useState<number | null>(null);
+  const [results, setResults] = useState<Result[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") {
@@ -37,62 +46,6 @@ function App() {
       setAppState(mockLoadingState);
     }
   }, []);
-
-  // no search performed
-  //
-  // return (
-  //   <div className="w-[600px] h-[400px] flex flex-col">
-  //     <div className="py-4 px-8 bg-neutral flex gap-3 flex-shrink-0">
-  //       <Input placeholder="E.g., a person was found in a possesison of a firearm" />
-
-  //       <Button>Search</Button>
-  //     </div>
-
-  //     <div className="p-3 flex-grow flex items-center justify-center">
-  //       <Typography variant="mutedText">
-  //         Start searching via the search box above
-  //       </Typography>
-  //     </div>
-  //   </div>
-  // );
-
-  // empty results
-  //
-  // return (
-  //   <div className="w-[600px] h-[400px] flex flex-col">
-  //     <div className="py-4 px-8 bg-neutral flex gap-3 flex-shrink-0">
-  //       <Input placeholder="E.g., a person was found in a possesison of a firearm" />
-
-  //       <Button>Search</Button>
-  //     </div>
-
-  //     <div className="p-3 flex-grow flex items-center justify-center">
-  //       <Typography variant="mutedText">No match found :(</Typography>
-  //     </div>
-  //   </div>
-  // );
-
-  // loading
-  //
-  // return (
-  //   <div className="w-[600px] h-[400px] flex flex-col">
-  //     <div className="py-4 px-8 bg-neutral flex gap-3 flex-shrink-0">
-  //       <Input
-  //         disabled
-  //         placeholder="E.g., a person was found in a possesison of a firearm"
-  //       />
-
-  //       <Button disabled>Search</Button>
-  //     </div>
-
-  //     <div className="p-3 flex-grow flex flex-col items-center justify-center">
-  //       <PuffLoader color="#3b82f6" className="mb-2" />
-  //       <Typography className="text-primary opacity-50">
-  //         Reading document 5 of 50
-  //       </Typography>
-  //     </div>
-  //   </div>
-  // );
 
   const data = [
     {
@@ -154,7 +107,6 @@ function App() {
   // );
 
   let expandedView;
-
   if (selected !== null) {
     expandedView = (
       <div className="flex flex-col overflow-hidden border-l pr-1">
@@ -215,14 +167,21 @@ function App() {
     );
   }
 
-  return (
-    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
-      <div className="col-span-2 flex gap-3 border-b bg-accent px-3 py-3">
-        <Input placeholder="E.g., a person was found in a possesison of a firearm" />
+  let contentView;
+  if (loading) {
+    contentView = (
+      <div className="col-span-2 flex flex-col items-center justify-center">
+        <div className="flex flex-grow items-center justify-center">
+          <PuffLoader color="#3b82f6" className="mb-4" />
+        </div>
 
-        <Button>Search</Button>
+        <div className="flex-shrink-0 text-xs text-muted-foreground">
+          Reading document 5 of 50
+        </div>
       </div>
-
+    );
+  } else if (results?.length) {
+    contentView = (
       <ScrollArea className={cn("px-3", selected === null && "col-span-2")}>
         <div className="flex flex-col gap-1">
           {data.map((d, index) => (
@@ -237,6 +196,46 @@ function App() {
           ))}
         </div>
       </ScrollArea>
+    );
+  } else if (results?.length === 0) {
+    contentView = (
+      <div className="col-span-2 flex items-center justify-center text-muted-foreground">
+        No match found, try a different search query
+      </div>
+    );
+  } else {
+    contentView = (
+      <div className="col-span-2 flex items-center justify-center text-sm text-muted-foreground">
+        Search within the available documents
+      </div>
+    );
+  }
+
+  function getResults(e: React.SyntheticEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    setTimeout(() => {
+      setResults(data);
+      setLoading(false);
+    }, 1000);
+  }
+
+  return (
+    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
+      <form
+        className="col-span-2 flex gap-3 border-b bg-accent px-3 py-3"
+        onSubmit={getResults}
+      >
+        <Input
+          disabled={loading}
+          placeholder="E.g., a person was found in a possesison of a firearm"
+        />
+
+        <Button disabled={loading}>Search</Button>
+      </form>
+
+      {contentView}
 
       {expandedView}
     </div>

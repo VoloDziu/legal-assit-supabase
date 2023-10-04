@@ -14,8 +14,8 @@ export function ListItem({ title, summary, onClick, active, expanded }: Props) {
     <button
       onClick={onClick}
       className={cn([
-        "flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left hover:bg-muted",
-        active ? "bg-muted" : "",
+        "flex w-full items-center gap-3 rounded-sm border px-3 py-2 text-left hover:bg-muted",
+        active ? "bg-muted" : "border-transparent",
       ])}
     >
       <div className="flex-shrink flex-grow overflow-hidden">
