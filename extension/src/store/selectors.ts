@@ -6,7 +6,7 @@ export function selectTabState(tabId: number): TabState | undefined {
 }
 
 export function allDocumentsExtracted(tabId: number): boolean {
-  const documents = selectTabState(tabId)?.data?.documents;
+  const documents = selectTabState(tabId)?.documents;
 
   return (
     !!documents &&

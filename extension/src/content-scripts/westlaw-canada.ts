@@ -1,5 +1,5 @@
+import { TabState } from "src/store/tabs";
 import { Connections, Message } from "../messaging";
-import { TabData } from "../store/tabs";
 
 function getSearchQuery(location: Location): string | null {
   const searchParams = new URLSearchParams(location.search);
@@ -94,38 +94,28 @@ async function getDocumentAnchors(
 }
 
 async function pageHandler(): Promise<void> {
-  // let pageType: PageType | undefined;
-  let data: TabData | undefined;
+  let data: TabState;
   const query = getSearchQuery(document.location);
 
   if (query) {
     const anchors = await getDocumentAnchors(document);
 
-    data = {
-      pageType: "search",
-      query: "",
-      status: "idle",
+    port.postMessage({
+      type: "tab-loaded",
       documents: Array.from(anchors).map((anchor) => ({
         id: getDocumentId(anchor.href),
         url: anchor.href,
         title: anchor.innerText,
         isProcessed: false,
       })),
-      searchResults: [],
-    };
+    } as Message);
   }
-
-  port.postMessage({
-    type: "tab-loaded",
-    data,
-  } as Message);
 }
 
 const port = chrome.runtime.connect({ name: Connections.ContentScript });
 port.onMessage.addListener(async (message: Message) => {
   switch (message.type) {
     case "start-extraction":
-      const promises: Promise<void>[] = [];
       const searchResultAhcnors = await getDocumentAnchors(document);
 
       searchResultAhcnors.forEach((anchor) => {
@@ -135,24 +125,17 @@ port.onMessage.addListener(async (message: Message) => {
           return;
         }
 
-        promises.push(
-          getDocumentParagraphsFromAnchor(anchor).then((paragraphs) =>
-            port.postMessage({
-              type: "document-extracted",
-              data: {
-                documentId,
-                paragraphs,
-              },
-            } as Message),
-          ),
+        getDocumentParagraphsFromAnchor(anchor).then((paragraphs) =>
+          port.postMessage({
+            type: "document-extracted",
+            data: {
+              documentId,
+              paragraphs,
+            },
+          } as Message),
         );
       });
   }
 });
-
-port.postMessage({
-  type: "tab-opened",
-  origin: "westlaw",
-} as Message);
 
 window.addEventListener("load", pageHandler, false);

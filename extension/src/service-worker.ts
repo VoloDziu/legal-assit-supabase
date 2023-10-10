@@ -9,7 +9,7 @@ import { allDocumentsExtracted, selectTabState } from "./store/selectors";
 import { store } from "./store/store";
 import { tabsSlice } from "./store/tabs";
 
-let sidePanelPort: chrome.runtime.Port | undefined;
+let appPort: chrome.runtime.Port | undefined;
 const tabPorts: { [id: string]: chrome.runtime.Port } = {};
 
 async function getActiveTab(): Promise<chrome.tabs.Tab> {
@@ -22,12 +22,13 @@ async function getActiveTab(): Promise<chrome.tabs.Tab> {
 }
 
 async function sendStateToApp(tabId: number) {
-  if (!sidePanelPort) {
+  const state = selectTabState(tabId);
+
+  if (!appPort || !state) {
     return;
   }
 
-  const state = selectTabState(tabId);
-  sidePanelPort.postMessage({
+  appPort.postMessage({
     type: "update-state",
     state: state,
   } as Message);
@@ -35,18 +36,19 @@ async function sendStateToApp(tabId: number) {
 }
 
 async function search(tabId: number) {
-  const tabSearchData = selectTabState(tabId)?.data;
+  const tabState = selectTabState(tabId);
 
-  if (!tabSearchData) {
+  if (!tabState) {
     console.warn(`cannot find search data for tab ${tabId}`);
     return;
   }
 
   try {
     const response = await apiSearch(
-      tabSearchData.documents.map((doc) => doc.id),
-      tabSearchData.query,
+      tabState.documents.map((doc) => doc.id),
+      tabState.query,
     );
+    // TODO: error handling
 
     dispatch(
       tabsSlice.actions.searchFinishedSuccess({
@@ -65,9 +67,7 @@ function dispatch(action: PayloadAction<any>) {
   store.dispatch(action);
 }
 
-chrome.tabs.onActivated.addListener((info) => {
-  sendStateToApp(info.tabId);
-});
+// TODO: clean-up old state when URL changes?
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   dispatch(tabsSlice.actions.deleteTab({ tabId }));
@@ -89,7 +89,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
     // communication between the app and the service worker
     case Connections.SidePanel:
       console.log("PORT: side panel port opened");
-      sidePanelPort = port;
+      appPort = port;
 
       port.onMessage.addListener(async function (message: Message) {
         const tab = await getActiveTab();
@@ -109,7 +109,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             }
 
             const tabState = selectTabState(tab.id);
-            if (!tabState || !tabState.data) {
+            if (!tabState) {
               return;
             }
             dispatch(
@@ -121,9 +121,10 @@ chrome.runtime.onConnect.addListener(async function (port) {
 
             const previouslyProcessedDocumentIds = (
               await apiCheckExistingDocuments(
-                tabState.data.documents.map((d) => d.id),
+                tabState.documents.map((d) => d.id),
               )
             ).map((doc) => doc.id);
+            // TODO error handling
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({
                 tabId: tab.id,
@@ -141,12 +142,19 @@ chrome.runtime.onConnect.addListener(async function (port) {
             }
 
             return;
+          case "result-selected":
+            store.dispatch(
+              tabsSlice.actions.selectDocument({
+                tabId: tab.id,
+                documentIndex: message.index,
+              }),
+            );
         }
       });
 
       port.onDisconnect.addListener(() => {
         console.log("PORT: side panel port closed");
-        sidePanelPort = undefined;
+        appPort = undefined;
       });
 
       return;
@@ -165,21 +173,21 @@ chrome.runtime.onConnect.addListener(async function (port) {
 
       port.onMessage.addListener(async (message: Message) => {
         switch (message.type) {
-          case "tab-opened":
-            dispatch(
-              tabsSlice.actions.createTab({ tabId, origin: message.origin }),
-            );
-            return;
           case "tab-loaded":
             dispatch(
-              tabsSlice.actions.updateTab({
+              tabsSlice.actions.createTab({
                 tabId,
-                data: message.data,
+                documents: message.documents,
               }),
             );
+            // chrome.action.setBadgeText({
+            //   text: `${message.data.documents.length}`,
+            //   tabId,
+            // });
             return;
           case "document-extracted":
             await apiCreateEmbeddings(message.data);
+            // TODO: add error handling
 
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({

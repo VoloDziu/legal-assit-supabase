@@ -8,20 +8,12 @@ export interface Document {
   isProcessed: boolean;
 }
 
-interface SearchTabData {
-  pageType: "search";
-  query: string;
-  status: "loading" | "idle" | "error";
-  documents: Document[];
-  searchResults: SearchResult[];
-}
-
-export type TabData = SearchTabData;
-
 export interface TabState {
-  loading: boolean;
-  origin: string;
-  data?: TabData;
+  query: string;
+  status: "initial" | "loading" | "done" | "error";
+  documents: Document[];
+  selectedDocumentIndex: number | null;
+  searchResults: SearchResult[];
 }
 
 export interface TabsState {
@@ -34,44 +26,35 @@ export const tabsSlice = createSlice({
   name: "tabs",
   initialState: initialTabsState,
   reducers: {
-    createTab(state, action: PayloadAction<{ tabId: number; origin: string }>) {
-      state[action.payload.tabId] = {
-        loading: true,
-        origin: action.payload.origin,
-      };
-    },
-    updateTab(
+    createTab(
       state,
       action: PayloadAction<{
         tabId: number;
-        data?: TabData;
+        documents: Document[];
       }>,
     ) {
-      const tabState = state[action.payload.tabId];
-
-      tabState.loading = false;
-      tabState.data = action.payload.data;
+      state[action.payload.tabId] = {
+        query: "",
+        status: "initial",
+        documents: action.payload.documents,
+        searchResults: [],
+        selectedDocumentIndex: null,
+      };
     },
     deleteTab(state, action: PayloadAction<{ tabId: number }>) {
       const { [action.payload.tabId]: _, ...rest } = state;
 
       return rest;
     },
-
-    // only on "search" type pages
     startSearchSession(
       state,
       action: PayloadAction<{ tabId: number; query: string }>,
     ) {
       const tabState = state[action.payload.tabId];
 
-      if (!tabState?.data || tabState?.data.pageType !== "search") {
-        return { ...state };
-      }
-
-      tabState.data.query = action.payload.query;
-      tabState.data.searchResults = [];
-      tabState.data.status = "loading";
+      tabState.query = action.payload.query;
+      tabState.searchResults = [];
+      tabState.status = "loading";
     },
     markDocumentsAsProcessed(
       state,
@@ -79,11 +62,7 @@ export const tabsSlice = createSlice({
     ) {
       const tabState = state[action.payload.tabId];
 
-      if (!tabState?.data || tabState?.data.pageType !== "search") {
-        return { ...state };
-      }
-
-      for (const doc of tabState.data.documents) {
+      for (const doc of tabState.documents) {
         if (action.payload.documentIds.includes(doc.id)) {
           doc.isProcessed = true;
         }
@@ -98,15 +77,10 @@ export const tabsSlice = createSlice({
     ) {
       const tabState = state[action.payload.tabId];
 
-      if (!tabState?.data || tabState?.data.pageType !== "search") {
-        return { ...state };
-      }
-
-      console.log(action.payload.results);
-      tabState.data.searchResults = action.payload.results.filter(
+      tabState.searchResults = action.payload.results.filter(
         (r) => !!r.summary,
       );
-      tabState.data.status = "idle";
+      tabState.status = "done";
     },
     sesarchFinishedError(
       state,
@@ -117,11 +91,15 @@ export const tabsSlice = createSlice({
     ) {
       const tabState = state[action.payload.tabId];
 
-      if (!tabState?.data || tabState?.data.pageType !== "search") {
-        return { ...state };
-      }
+      tabState.status = "error";
+    },
+    selectDocument(
+      state,
+      action: PayloadAction<{ tabId: number; documentIndex: number | null }>,
+    ) {
+      const tabState = state[action.payload.tabId];
 
-      tabState.data.status = "error";
+      tabState.selectedDocumentIndex = action.payload.documentIndex;
     },
   },
 });

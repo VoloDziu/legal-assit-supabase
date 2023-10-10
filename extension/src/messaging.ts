@@ -1,5 +1,5 @@
 import { ExtractedContent } from "./models";
-import { TabData, TabState } from "./store/tabs";
+import { Document, TabState } from "./store/tabs";
 
 export enum Connections {
   SidePanel = "side-panel",
@@ -12,7 +12,7 @@ export type Message =
     }
   | {
       type: "update-state";
-      state: TabState | undefined;
+      state: TabState;
     }
   | {
       type: "start-search";
@@ -27,10 +27,10 @@ export type Message =
       data: ExtractedContent;
     }
   | {
-      type: "tab-opened";
-      origin: string;
+      type: "tab-loaded";
+      documents: Document[];
     }
   | {
-      type: "tab-loaded";
-      data?: TabData;
+      type: "result-selected";
+      index: number | null;
     };
