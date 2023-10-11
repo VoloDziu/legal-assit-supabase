@@ -4,7 +4,7 @@ import { bulkEmbed } from "../ai-openai.ts";
 import { ExtractedContent } from "../../../extension/src/models.ts";
 import { isWithinTokenLimit } from "gpt-tokenizer";
 
-const EMBEDDING_CHUNK_TOKENS_LIMIT = 500;
+const EMBEDDING_CHUNK_TOKENS_LIMIT = 300;
 
 async function processDocument(content: ExtractedContent): Promise<void> {
   let embeddings: number[][];
@@ -14,8 +14,8 @@ async function processDocument(content: ExtractedContent): Promise<void> {
   let chunk = "";
   for (let i = 0; i < content.paragraphs.length; i++) {
     chunk = chunk
-      ? `${chunk} \n ${content.paragraphs[i]}`
-      : content.paragraphs[i];
+      ? `${chunk}<p>${content.paragraphs[i]}</p>`
+      : `<p>${content.paragraphs[i]}</p>`;
 
     if (!isWithinTokenLimit(chunk, EMBEDDING_CHUNK_TOKENS_LIMIT)) {
       embeddingChunks.push(chunk);
@@ -28,7 +28,11 @@ async function processDocument(content: ExtractedContent): Promise<void> {
   }
 
   try {
-    embeddings = await bulkEmbed(embeddingChunks);
+    embeddings = await bulkEmbed(
+      embeddingChunks.map((chunk) =>
+        chunk.replace(/<p>/g, "").replace(/<\/p>/g, "\n")
+      )
+    );
   } catch {
     throw new Error(`could not create embeddings for ${content.documentId}`);
   }
