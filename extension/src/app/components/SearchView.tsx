@@ -29,7 +29,7 @@ function SearchView() {
   }
 
   return (
-    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_60%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
+    <div className="grid h-[400px] w-[600px] grid-cols-[1fr_70%] grid-rows-[max-content_1fr] gap-x-1 gap-y-3 pb-3">
       <SearchViewForm />
       {contentView}
       <SearchViewDetails />

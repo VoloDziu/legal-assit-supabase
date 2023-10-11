@@ -26,7 +26,10 @@ function SearchViewDetails() {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden border-l pr-1">
+    <div
+      key={selectedDocument?.id}
+      className="flex flex-col overflow-hidden border-l pr-1"
+    >
       <div className="flex flex-shrink-0 items-center pl-5">
         <div className="mr-4 flex-grow truncate text-base font-bold">
           {selectedDocument?.title}
@@ -56,11 +59,25 @@ function SearchViewDetails() {
 
         <div className="mb-1 text-sm">Source:</div>
 
-        {selectedResult.paragraphs.map((p, index) => (
-          <div className="mb-1 text-sm text-muted-foreground" key={index}>
-            {p}
-          </div>
-        ))}
+        <div className="flex flex-col gap-2">
+          {selectedResult.paragraphs.map((p, index) => {
+            const divider = index > 0 ? <div className="">&#8943;</div> : "";
+
+            return (
+              <>
+                {divider}
+
+                <div
+                  className="flex flex-col gap-2 text-sm text-muted-foreground"
+                  key={index}
+                  dangerouslySetInnerHTML={{
+                    __html: p,
+                  }}
+                ></div>
+              </>
+            );
+          })}
+        </div>
       </ScrollArea>
     </div>
   );
