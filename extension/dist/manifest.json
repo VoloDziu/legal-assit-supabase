@@ -23,13 +23,5 @@
     "default_title": "Click to open the assistant",
     "default_popup": "./build/app/index.html"
   },
-  "host_permissions": ["https://legal-assistant-pptqcreaba-uc.a.run.app/*"],
-  "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Ctrl+B",
-        "mac": "Command+B"
-      }
-    }
-  }
+  "host_permissions": ["https://legal-assistant-pptqcreaba-uc.a.run.app/*"]
 }
