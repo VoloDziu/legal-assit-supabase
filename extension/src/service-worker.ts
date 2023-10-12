@@ -48,7 +48,6 @@ async function search(tabId: number) {
       tabState.documents.map((doc) => doc.id),
       tabState.query,
     );
-    // TODO: error handling
 
     dispatch(
       tabsSlice.actions.searchFinishedSuccess({
@@ -57,7 +56,12 @@ async function search(tabId: number) {
       }),
     );
   } catch (e: unknown) {
-    console.error("Error", e);
+    dispatch(
+      tabsSlice.actions.sesarchFinishedError({
+        tabId,
+        error: "failed to perform search",
+      }),
+    );
   }
 }
 
@@ -119,26 +123,30 @@ chrome.runtime.onConnect.addListener(async function (port) {
               }),
             );
 
-            const previouslyProcessedDocumentIds = (
-              await apiCheckExistingDocuments(
-                tabState.documents.map((d) => d.id),
-              )
-            ).map((doc) => doc.id);
-            // TODO error handling
-            dispatch(
-              tabsSlice.actions.markDocumentsAsProcessed({
-                tabId: tab.id,
-                documentIds: previouslyProcessedDocumentIds,
-              }),
-            );
+            try {
+              const previouslyProcessedDocumentIds = (
+                await apiCheckExistingDocuments(
+                  tabState.documents.map((d) => d.id),
+                )
+              ).map((doc) => doc.id);
 
-            if (allDocumentsExtracted(tab.id)) {
-              search(tab.id);
-            } else {
-              tabPort.postMessage({
-                type: "start-extraction",
-                documentIdsToIgnore: previouslyProcessedDocumentIds,
-              } as Message);
+              dispatch(
+                tabsSlice.actions.markDocumentsAsProcessed({
+                  tabId: tab.id,
+                  documentIds: previouslyProcessedDocumentIds,
+                }),
+              );
+
+              if (allDocumentsExtracted(tab.id)) {
+                search(tab.id);
+              } else {
+                tabPort.postMessage({
+                  type: "start-extraction",
+                  documentIdsToIgnore: previouslyProcessedDocumentIds,
+                } as Message);
+              }
+            } catch {
+              // do nothing
             }
 
             return;
@@ -180,14 +188,13 @@ chrome.runtime.onConnect.addListener(async function (port) {
                 documents: message.documents,
               }),
             );
-            // chrome.action.setBadgeText({
-            //   text: `${message.data.documents.length}`,
-            //   tabId,
-            // });
             return;
           case "document-extracted":
-            await apiCreateEmbeddings(message.data);
-            // TODO: add error handling
+            try {
+              await apiCreateEmbeddings(message.data);
+            } catch (e: unknown) {
+              // do nothing
+            }
 
             dispatch(
               tabsSlice.actions.markDocumentsAsProcessed({
@@ -199,6 +206,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             if (allDocumentsExtracted(tabId)) {
               search(tabId);
             }
+
             return;
         }
       });
