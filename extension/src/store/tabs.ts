@@ -54,6 +54,7 @@ export const tabsSlice = createSlice({
 
       tabState.query = action.payload.query;
       tabState.searchResults = [];
+      tabState.selectedDocumentIndex = null;
       tabState.status = "loading";
     },
     markDocumentsAsProcessed(
