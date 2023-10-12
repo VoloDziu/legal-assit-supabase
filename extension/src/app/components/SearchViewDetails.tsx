@@ -1,6 +1,6 @@
 import { ChromePortContext, StateContext } from "@/App";
 import { Cross1Icon, ExternalLinkIcon } from "@radix-ui/react-icons";
-import { useContext } from "react";
+import { Fragment, useContext } from "react";
 import { Message } from "src/messaging";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -64,17 +64,16 @@ function SearchViewDetails() {
             const divider = index > 0 ? <div className="">&#8943;</div> : "";
 
             return (
-              <>
+              <Fragment key={index}>
                 {divider}
 
                 <div
                   className="flex flex-col gap-2 text-sm text-muted-foreground"
-                  key={index}
                   dangerouslySetInnerHTML={{
                     __html: p,
                   }}
                 ></div>
-              </>
+              </Fragment>
             );
           })}
         </div>
