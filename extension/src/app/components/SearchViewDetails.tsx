@@ -9,7 +9,11 @@ function SearchViewDetails() {
   const state = useContext(StateContext);
   const port = useContext(ChromePortContext);
 
-  if (!state || state.selectedDocumentIndex === null) {
+  if (
+    !state ||
+    state.type !== "sesarch-results" ||
+    state.selectedDocumentIndex === null
+  ) {
     return;
   }
 

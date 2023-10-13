@@ -38,7 +38,7 @@ async function sendStateToApp(tabId: number) {
 async function search(tabId: number) {
   const tabState = selectTabState(tabId);
 
-  if (!tabState) {
+  if (!tabState || tabState.type !== "sesarch-results") {
     console.warn(`cannot find search data for tab ${tabId}`);
     return;
   }
@@ -71,10 +71,16 @@ function dispatch(action: PayloadAction<any>) {
   store.dispatch(action);
 }
 
-// TODO: clean-up old state when URL changes?
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === "loading") {
+    dispatch(
+      tabsSlice.actions.setTabState({ tabId, state: { type: "unsupported" } }),
+    );
+  }
+});
 
 chrome.tabs.onRemoved.addListener((tabId) => {
-  dispatch(tabsSlice.actions.deleteTab({ tabId }));
+  dispatch(tabsSlice.actions.deleteTabState({ tabId }));
 });
 
 store.subscribe(async () => {
@@ -113,7 +119,7 @@ chrome.runtime.onConnect.addListener(async function (port) {
             }
 
             const tabState = selectTabState(tab.id);
-            if (!tabState) {
+            if (!tabState || tabState.type !== "sesarch-results") {
               return;
             }
             dispatch(
@@ -183,9 +189,16 @@ chrome.runtime.onConnect.addListener(async function (port) {
         switch (message.type) {
           case "tab-loaded":
             dispatch(
-              tabsSlice.actions.createTab({
+              tabsSlice.actions.setTabState({
                 tabId,
-                documents: message.documents,
+                state: {
+                  type: "sesarch-results",
+                  query: "",
+                  status: "initial",
+                  selectedDocumentIndex: null,
+                  searchResults: [],
+                  documents: message.documents,
+                },
               }),
             );
             return;

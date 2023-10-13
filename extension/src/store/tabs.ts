@@ -8,7 +8,14 @@ export interface Document {
   isProcessed: boolean;
 }
 
-export interface TabState {
+export type TabState = SearchResultsState | UnsupportedState;
+
+export interface UnsupportedState {
+  type: "unsupported";
+}
+
+export interface SearchResultsState {
+  type: "sesarch-results";
   query: string;
   status: "initial" | "loading" | "done" | "error";
   documents: Document[];
@@ -26,22 +33,16 @@ export const tabsSlice = createSlice({
   name: "tabs",
   initialState: initialTabsState,
   reducers: {
-    createTab(
+    setTabState(
       state,
       action: PayloadAction<{
         tabId: number;
-        documents: Document[];
+        state: TabState;
       }>,
     ) {
-      state[action.payload.tabId] = {
-        query: "",
-        status: "initial",
-        documents: action.payload.documents,
-        searchResults: [],
-        selectedDocumentIndex: null,
-      };
+      state[action.payload.tabId] = action.payload.state;
     },
-    deleteTab(state, action: PayloadAction<{ tabId: number }>) {
+    deleteTabState(state, action: PayloadAction<{ tabId: number }>) {
       const { [action.payload.tabId]: _, ...rest } = state;
 
       return rest;
@@ -51,6 +52,10 @@ export const tabsSlice = createSlice({
       action: PayloadAction<{ tabId: number; query: string }>,
     ) {
       const tabState = state[action.payload.tabId];
+
+      if (tabState.type !== "sesarch-results") {
+        return { ...state };
+      }
 
       tabState.query = action.payload.query;
       tabState.searchResults = [];
@@ -62,6 +67,10 @@ export const tabsSlice = createSlice({
       action: PayloadAction<{ tabId: number; documentIds: string[] }>,
     ) {
       const tabState = state[action.payload.tabId];
+
+      if (tabState.type !== "sesarch-results") {
+        return { ...state };
+      }
 
       for (const doc of tabState.documents) {
         if (action.payload.documentIds.includes(doc.id)) {
@@ -78,6 +87,10 @@ export const tabsSlice = createSlice({
     ) {
       const tabState = state[action.payload.tabId];
 
+      if (tabState.type !== "sesarch-results") {
+        return { ...state };
+      }
+
       tabState.searchResults = action.payload.results.filter(
         (r) => !!r.summary,
       );
@@ -92,6 +105,10 @@ export const tabsSlice = createSlice({
     ) {
       const tabState = state[action.payload.tabId];
 
+      if (tabState.type !== "sesarch-results") {
+        return { ...state };
+      }
+
       tabState.status = "error";
     },
     selectDocument(
@@ -99,6 +116,10 @@ export const tabsSlice = createSlice({
       action: PayloadAction<{ tabId: number; documentIndex: number | null }>,
     ) {
       const tabState = state[action.payload.tabId];
+
+      if (tabState.type !== "sesarch-results") {
+        return { ...state };
+      }
 
       tabState.selectedDocumentIndex = action.payload.documentIndex;
     },

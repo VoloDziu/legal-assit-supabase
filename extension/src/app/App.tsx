@@ -3,6 +3,7 @@ import { TabState } from "src/store/tabs";
 import { Connections, Message } from "../messaging";
 import NoStateView from "./components/NoStateView";
 import SearchView from "./components/SearchView";
+import UnsupportedView from "./components/UnsupportedView";
 
 export const ChromePortContext = createContext<chrome.runtime.Port | undefined>(
   undefined,
@@ -37,7 +38,11 @@ function App() {
   return (
     <StateContext.Provider value={state}>
       <ChromePortContext.Provider value={port}>
-        <SearchView />
+        {state.type === "sesarch-results" ? (
+          <SearchView />
+        ) : (
+          <UnsupportedView />
+        )}
       </ChromePortContext.Provider>
     </StateContext.Provider>
   );
