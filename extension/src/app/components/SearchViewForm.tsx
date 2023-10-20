@@ -7,13 +7,14 @@ import { Input } from "./ui/input";
 function SearchViewForm() {
   const state = useContext(StateContext);
   const port = useContext(ChromePortContext);
+
+  if (!state || state.type !== "sesarch-results") {
+    return;
+  }
+
   const [inputValue, setInputValue] = useState<string | undefined>(
     state?.query || "",
   );
-
-  if (!state) {
-    return;
-  }
 
   function doSearch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

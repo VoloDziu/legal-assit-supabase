@@ -17,7 +17,7 @@ function SearchViewList() {
     } as Message);
   }
 
-  if (!state) {
+  if (!state || state.type !== "sesarch-results") {
     return;
   }
 

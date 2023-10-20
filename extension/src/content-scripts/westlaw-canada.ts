@@ -125,6 +125,7 @@ port.onMessage.addListener(async (message: Message) => {
           return;
         }
 
+        // todo: error handling
         getDocumentParagraphsFromAnchor(anchor).then((paragraphs) =>
           port.postMessage({
             type: "document-extracted",

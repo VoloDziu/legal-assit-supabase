@@ -5,7 +5,7 @@ import { PuffLoader } from "react-spinners";
 function SearchViewLoading() {
   const state = useContext(StateContext);
 
-  if (!state) {
+  if (!state || state.type !== "sesarch-results") {
     return;
   }
 
@@ -17,7 +17,7 @@ function SearchViewLoading() {
   return (
     <div className="col-span-2 flex flex-col items-center justify-center">
       <div className="flex flex-grow items-center justify-center">
-        <PuffLoader color="#3b82f6" className="mb-4" />
+        <PuffLoader color="#7C3AED" className="mb-4" />
       </div>
 
       <div className="flex-shrink-0 text-xs text-muted-foreground">

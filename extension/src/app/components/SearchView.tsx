@@ -11,7 +11,7 @@ import SearchViewLoading from "./SearchViewLoading";
 function SearchView() {
   const state = useContext(StateContext);
 
-  if (!state) {
+  if (!state || state.type !== "sesarch-results") {
     return;
   }
 

@@ -73,11 +73,56 @@ function dispatch(action: PayloadAction<any>) {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
+    chrome.action.setIcon({
+      path: {
+        16: "../../assets/icons-inactive/16.png",
+        32: "../../assets/icons-inactive/32.png",
+        48: "../../assets/icons-inactive/48.png",
+        128: "../../assets/icons-inactive/128.png",
+      },
+    });
+
     dispatch(
       tabsSlice.actions.setTabState({ tabId, state: { type: "unsupported" } }),
     );
   }
 });
+
+function updateIcon(tabId: number) {
+  console.log(">>>", tabId);
+  const tabState = selectTabState(tabId);
+
+  if (!tabState || tabState.type === "unsupported") {
+    chrome.action.setIcon({
+      path: {
+        16: "../../assets/icons-inactive/16.png",
+        32: "../../assets/icons-inactive/32.png",
+        48: "../../assets/icons-inactive/48.png",
+        128: "../../assets/icons-inactive/128.png",
+      },
+    });
+  } else {
+    chrome.action.setIcon({
+      path: {
+        16: "../../assets/icons/16.png",
+        32: "../../assets/icons/32.png",
+        48: "../../assets/icons/48.png",
+        128: "../../assets/icons/128.png",
+      },
+      tabId,
+    });
+  }
+}
+
+chrome.windows.onFocusChanged.addListener(async () => {
+  const activeTab = await getActiveTab();
+  if (activeTab?.id) {
+    updateIcon(activeTab.id);
+  }
+});
+chrome.tabs.onActivated.addListener((activeInfo) =>
+  updateIcon(activeInfo.tabId),
+);
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   dispatch(tabsSlice.actions.deleteTabState({ tabId }));
@@ -129,8 +174,9 @@ chrome.runtime.onConnect.addListener(async function (port) {
               }),
             );
 
+            let previouslyProcessedDocumentIds: string[] = [];
             try {
-              const previouslyProcessedDocumentIds = (
+              previouslyProcessedDocumentIds = (
                 await apiCheckExistingDocuments(
                   tabState.documents.map((d) => d.id),
                 )
@@ -142,17 +188,17 @@ chrome.runtime.onConnect.addListener(async function (port) {
                   documentIds: previouslyProcessedDocumentIds,
                 }),
               );
-
-              if (allDocumentsExtracted(tab.id)) {
-                search(tab.id);
-              } else {
-                tabPort.postMessage({
-                  type: "start-extraction",
-                  documentIdsToIgnore: previouslyProcessedDocumentIds,
-                } as Message);
-              }
             } catch {
               // do nothing
+            }
+
+            if (allDocumentsExtracted(tab.id)) {
+              search(tab.id);
+            } else {
+              tabPort.postMessage({
+                type: "start-extraction",
+                documentIdsToIgnore: previouslyProcessedDocumentIds,
+              } as Message);
             }
 
             return;
@@ -188,6 +234,15 @@ chrome.runtime.onConnect.addListener(async function (port) {
       port.onMessage.addListener(async (message: Message) => {
         switch (message.type) {
           case "tab-loaded":
+            chrome.action.setIcon({
+              path: {
+                16: "../../assets/icons/16.png",
+                32: "../../assets/icons/32.png",
+                48: "../../assets/icons/48.png",
+                128: "../../assets/icons/128.png",
+              },
+            });
+
             dispatch(
               tabsSlice.actions.setTabState({
                 tabId,

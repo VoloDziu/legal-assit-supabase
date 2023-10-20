@@ -16,9 +16,10 @@
   ],
   "action": {
     "default_icon": {
-      "16": "./assets/icon.png",
-      "48": "./assets/icon.png",
-      "128": "./assets/icon.png"
+      "16": "./assets/icons-inactive/16.png",
+      "32": "./assets/icons-inactive/32.png",
+      "48": "./assets/icons-inactive/48.png",
+      "128": "./assets/icons-inactive/128.png"
     },
     "default_title": "Click to open the assistant",
     "default_popup": "./build/app/index.html"
